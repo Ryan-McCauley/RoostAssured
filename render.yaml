@@ -1,6 +1,7 @@
 databases:
   - name: roost-assured-db
     plan: basic-256mb
+    region: ohio
     databaseName: roost_assured_production
     user: roost_assured
 
@@ -10,6 +11,7 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     plan: starter
+    region: ohio
     healthCheckPath: /up
     disk:
       name: roost-assured-storage
@@ -53,6 +55,7 @@ services:
     dockerfilePath: ./Dockerfile
     dockerCommand: bin/rails solid_queue:start
     plan: starter
+    region: ohio
     envVars:
       - key: RAILS_ENV
         value: production
