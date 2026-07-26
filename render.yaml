@@ -29,7 +29,7 @@ services:
       - key: RAILS_MAX_THREADS
         value: 5
       - key: WEB_CONCURRENCY
-        value: 2
+        value: 1
       - key: APP_HOST
         value: roostassured.com
       - key: STORAGE_DISK_PATH
