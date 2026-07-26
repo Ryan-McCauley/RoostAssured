@@ -51,8 +51,9 @@ Rails.application.configure do
   config.cache_store = :solid_cache_store
 
   # Replace the default in-process and non-durable queuing backend for Active Job.
+  # Runs against the primary database rather than a separate physical database
+  # (fine at this scale, and avoids provisioning 3 extra Postgres databases on Render).
   config.active_job.queue_adapter = :solid_queue
-  config.solid_queue.connects_to = { database: { writing: :queue } }
 
   # Raise if a message can't be delivered, so failures are visible instead of silent.
   config.action_mailer.raise_delivery_errors = true
