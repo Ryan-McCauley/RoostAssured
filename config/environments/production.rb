@@ -60,20 +60,20 @@ Rails.application.configure do
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: ENV.fetch("APP_HOST", "roostassured.com") }
 
-  # Send outgoing mail through Postmark's SMTP relay.
-  postmark_token = ENV.fetch("POSTMARK_SERVER_TOKEN") do
-    Rails.application.credentials.dig(:postmark, :server_token)
+  # Send outgoing mail through Resend's SMTP relay.
+  resend_api_key = ENV.fetch("RESEND_API_KEY") do
+    Rails.application.credentials.dig(:resend, :api_key)
   rescue ActiveSupport::MessageEncryptor::InvalidMessage, ActiveSupport::EncryptedFile::MissingKeyError, ArgumentError
     nil
   end
 
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
-    address: "smtp.postmarkapp.com",
+    address: "smtp.resend.com",
     port: 587,
     domain: ENV.fetch("APP_HOST", "roostassured.com"),
-    user_name: postmark_token,
-    password: postmark_token,
+    user_name: "resend",
+    password: resend_api_key,
     authentication: :plain,
     enable_starttls_auto: true
   }

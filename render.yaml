@@ -44,7 +44,7 @@ services:
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
-      - key: POSTMARK_SERVER_TOKEN
+      - key: RESEND_API_KEY
         sync: false
       - key: MAILER_FROM
         value: "Roost Assured <hello@roostassured.com>"
@@ -71,7 +71,7 @@ services:
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
-      - key: POSTMARK_SERVER_TOKEN
+      - key: RESEND_API_KEY
         sync: false
       - key: MAILER_FROM
         value: "Roost Assured <hello@roostassured.com>"

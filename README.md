@@ -8,7 +8,7 @@ launching in East Texas with a single sitter while demand data is collected.
 - Rails 8.1 (API), PostgreSQL, Solid Queue/Cache/Cable
 - React 19 + Vite frontend (`app/frontend`), served by the same Rails app
 - Stripe Connect for marketplace payments
-- Postmark (SMTP) for transactional email
+- Resend (SMTP) for transactional email
 - Hosted on Render (web service + Postgres + background worker)
 
 ## Local development
@@ -41,7 +41,7 @@ Steps:
 3. Set the `sync: false` env vars in the Render dashboard for `roost-assured-web`
    (and `roost-assured-worker` where applicable): `RAILS_MASTER_KEY`,
    `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`,
-   `POSTMARK_SERVER_TOKEN`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`.
+   `RESEND_API_KEY`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`.
 4. Attach the `roostassured.com` custom domain to `roost-assured-web` and
    point its DNS at Render.
 5. Add the Stripe webhook endpoint (`https://roostassured.com/api/stripe_webhooks`)
