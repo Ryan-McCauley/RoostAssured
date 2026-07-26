@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "roost-assured",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "export PATH=\"$HOME/.rbenv/versions/3.4.10/bin:$PATH\"; source \"$HOME/.nvm/nvm.sh\"; nvm use 20.20.2; bin/vite dev & exec bin/rails server -p ${PORT:-3000} -b 0.0.0.0"],
+      "port": 3000,
+      "autoPort": true
+    }
+  ]
+}

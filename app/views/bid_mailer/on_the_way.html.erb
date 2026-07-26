@@ -1,0 +1,9 @@
+<p>Hi <%= @owner.name %>,</p>
+
+<p>
+  <strong><%= @sitter.name %></strong> is on the way to take care of your flock<%= @bid.estimated_arrival_at.present? ? ", estimated to arrive around #{@bid.estimated_arrival_at.strftime('%-I:%M %p')}" : "" %>.
+</p>
+
+<p><%= link_to "View your request", root_url %></p>
+
+<p>— Roost Assured</p>

@@ -1,0 +1,34 @@
+<p>Hi there,</p>
+
+<p>
+  You're on the Roost Assured waitlist. We're rolling out area by area,
+  and we'll email you the moment we're live near you.
+</p>
+
+<% if @waitlist_signup.looking_for_sitter? && @available_sitters.any? %>
+  <p>
+    Good news — <strong><%= pluralize(@available_sitters.count, "sitter") %></strong>
+    <% if @waitlist_signup.sitting_start_date.present? %>
+      already available near <%= @waitlist_signup.city %>, <%= @waitlist_signup.state %> for your dates.
+    <% else %>
+      already active near <%= @waitlist_signup.city %>, <%= @waitlist_signup.state %>.
+    <% end %>
+    We'll follow up separately to help make the connection.
+  </p>
+<% end %>
+
+<p>
+  Want to move up the list and help us launch sooner? Share your personal
+  link with any neighbor who keeps chickens or would enjoy sitting for them:
+</p>
+
+<p><%= link_to @referral_url, @referral_url %></p>
+
+<% if @waitlist_signup.referrals_count.positive? %>
+  <p>
+    <strong><%= pluralize(@waitlist_signup.referrals_count, "neighbor") %></strong>
+    has already joined thanks to you. Thank you!
+  </p>
+<% end %>
+
+<p>— The Roost Assured team</p>

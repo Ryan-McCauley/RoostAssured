@@ -1,0 +1,7 @@
+Hi <%= @owner.name %>,
+
+<%= @sitter.name %> is on the way to take care of your flock<%= @bid.estimated_arrival_at.present? ? ", estimated to arrive around #{@bid.estimated_arrival_at.strftime('%-I:%M %p')}" : "" %>.
+
+View your request: <%= root_url %>
+
+— Roost Assured

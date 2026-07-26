@@ -1,0 +1,10 @@
+<p>Hi <%= @sitter.name %>,</p>
+
+<p>
+  <strong><%= @owner.name %></strong> made changes to their care request after you submitted your bid.
+  Please review the updated details and resubmit your bid so they can consider it.
+</p>
+
+<p><%= link_to "Review the request", root_url %></p>
+
+<p>— Roost Assured</p>
