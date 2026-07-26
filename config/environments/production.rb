@@ -66,8 +66,8 @@ Rails.application.configure do
     address: "smtp.postmarkapp.com",
     port: 587,
     domain: ENV.fetch("APP_HOST", "roostassured.com"),
-    user_name: ENV.fetch("POSTMARK_SERVER_TOKEN", Rails.application.credentials.dig(:postmark, :server_token)),
-    password: ENV.fetch("POSTMARK_SERVER_TOKEN", Rails.application.credentials.dig(:postmark, :server_token)),
+    user_name: ENV.fetch("POSTMARK_SERVER_TOKEN") { Rails.application.credentials.dig(:postmark, :server_token) },
+    password: ENV.fetch("POSTMARK_SERVER_TOKEN") { Rails.application.credentials.dig(:postmark, :server_token) },
     authentication: :plain,
     enable_starttls_auto: true
   }
