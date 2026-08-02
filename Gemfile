@@ -14,7 +14,7 @@ gem "vite_rails"
 gem "rack-cors"
 
 # Stripe Connect marketplace payments [https://github.com/stripe/stripe-ruby]
-gem "stripe", "~> 13.0"
+gem "stripe", "~> 19.4"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1.7"
