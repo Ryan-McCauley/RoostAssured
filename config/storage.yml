@@ -6,14 +6,19 @@ local:
   service: Disk
   root: <%= Rails.root.join("storage") %>
 
-# Points at a Render Disk mounted at /var/data (see render.yaml). Render's
-# filesystem is otherwise ephemeral, so uploads would be lost on every deploy
-# without a persistent disk.
+# Points at a Render Disk mounted at /var/data (see render.yaml). Render's filesystem is otherwise
+# ephemeral, so uploads would be lost on every deploy without a persistent disk.
+#
+# A Render disk attaches to exactly one service, which has two consequences worth knowing before
+# this app grows: the web service cannot scale past a single instance, and the background worker
+# cannot read or write attachments at all. See the "Known limitations" section of the README.
+# Switching to S3 (below) removes both constraints and is the intended next step.
 production_disk:
   service: Disk
   root: <%= ENV.fetch("STORAGE_DISK_PATH", "/var/data/storage") %>
 
-# Use bin/rails credentials:edit to set the AWS secrets (as aws:access_key_id|secret_access_key)
+# The path off the single-instance constraint above. Set the AWS credentials and point
+# config.active_storage.service at :amazon in config/environments/production.rb.
 # amazon:
 #   service: S3
 #   access_key_id: <%= Rails.application.credentials.dig(:aws, :access_key_id) %>

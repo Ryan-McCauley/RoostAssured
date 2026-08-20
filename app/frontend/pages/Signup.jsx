@@ -8,7 +8,6 @@ import Stepper from "../components/Stepper"
 import CalendarPicker from "../components/CalendarPicker"
 
 const STEPS = ["Location", "Chicken math", "Coop type", "Sitting type", "Care tasks", "Feed & water setup", "Special requests", "Account", "Sitting dates"]
-const LAST_STEP = STEPS.length - 1
 const ACCOUNT_STEP = 7
 const DATES_STEP = 8
 
@@ -72,7 +71,8 @@ export default function Signup() {
     setSubmitting(true)
     setErrors([])
     try {
-      const { sitting_dates, agreed_to_terms, ...rest } = form
+      // Pulled out of `rest` on purpose: neither is sent to the registration endpoint.
+      const { sitting_dates: _sitting_dates, agreed_to_terms: _agreed_to_terms, ...rest } = form
       const result = await api.post("/registration", { user: rest })
       setUser(result.user)
       setErrors([])

@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom"
 import { AuthProvider } from "./context/AuthContext"
 import { ThemeProvider } from "./context/ThemeContext"
 import Layout from "./components/Layout"
+import RequireAuth from "./components/RequireAuth"
 import Home from "./pages/Home"
 import Login from "./pages/Login"
 import Signup from "./pages/Signup"
@@ -31,39 +32,39 @@ import BackgroundCheckDisclosure from "./pages/legal/BackgroundCheckDisclosure"
 export default function App() {
   return (
     <ThemeProvider>
-    <AuthProvider>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/passwords/new" element={<PasswordResetRequest />} />
-          <Route path="/passwords/:token/edit" element={<PasswordResetEdit />} />
-          <Route path="/sitters/:id" element={<SitterShow />} />
-          <Route path="/become-a-sitter" element={<BecomeSitter />} />
-          <Route path="/account" element={<Account />} />
-          <Route path="/job_requests" element={<JobRequests />} />
-          <Route path="/terms" element={<TermsOfService />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/independent-contractor-disclosure" element={<IndependentContractorDisclosure />} />
-          <Route path="/background-check-disclosure" element={<BackgroundCheckDisclosure />} />
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminWaitlistSignups />} />
-            <Route path="waitlist_signups" element={<AdminWaitlistSignups />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="sitter_applications" element={<AdminSitterApplications />} />
-            <Route path="sitters" element={<AdminSitters />} />
-            <Route path="service_areas" element={<AdminServiceAreas />} />
-            <Route path="zip_searches" element={<AdminZipSearches />} />
-            <Route path="heatmap" element={<AdminHeatmap />} />
-            <Route path="jobs" element={<AdminJobs />} />
-            <Route path="payments" element={<AdminPayments />} />
-            <Route path="reports" element={<AdminReports />} />
-          </Route>
-          <Route path="*" element={<Home />} />
-        </Routes>
-      </Layout>
-    </AuthProvider>
+      <AuthProvider>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/passwords/new" element={<PasswordResetRequest />} />
+            <Route path="/passwords/:token/edit" element={<PasswordResetEdit />} />
+            <Route path="/sitters/:id" element={<SitterShow />} />
+            <Route path="/become-a-sitter" element={<BecomeSitter />} />
+            <Route path="/account" element={<RequireAuth><Account /></RequireAuth>} />
+            <Route path="/job_requests" element={<RequireAuth><JobRequests /></RequireAuth>} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/independent-contractor-disclosure" element={<IndependentContractorDisclosure />} />
+            <Route path="/background-check-disclosure" element={<BackgroundCheckDisclosure />} />
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminWaitlistSignups />} />
+              <Route path="waitlist_signups" element={<AdminWaitlistSignups />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="sitter_applications" element={<AdminSitterApplications />} />
+              <Route path="sitters" element={<AdminSitters />} />
+              <Route path="service_areas" element={<AdminServiceAreas />} />
+              <Route path="zip_searches" element={<AdminZipSearches />} />
+              <Route path="heatmap" element={<AdminHeatmap />} />
+              <Route path="jobs" element={<AdminJobs />} />
+              <Route path="payments" element={<AdminPayments />} />
+              <Route path="reports" element={<AdminReports />} />
+            </Route>
+            <Route path="*" element={<Home />} />
+          </Routes>
+        </Layout>
+      </AuthProvider>
     </ThemeProvider>
   )
 }

@@ -33,10 +33,6 @@ class SitterApplication < ApplicationRecord
     status == "approved"
   end
 
-  def rejected?
-    status == "rejected"
-  end
-
   def background_check_cleared?
     background_check_status == "clear"
   end

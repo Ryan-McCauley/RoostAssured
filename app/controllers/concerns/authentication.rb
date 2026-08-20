@@ -43,10 +43,6 @@ module Authentication
       render json: { errors: [ "You must sign in to continue" ] }, status: :unauthorized
     end
 
-    def after_authentication_url
-      nil
-    end
-
     def start_new_session_for(user)
       user.sessions.create!(user_agent: request.user_agent, ip_address: request.remote_ip).tap do |session|
         Current.session = session

@@ -17,7 +17,7 @@ export default function Payments() {
   // Debounced so typing doesn't fire a request per keystroke now that search runs server-side.
   const query = useDebounced(search, 300)
 
-  const { data, meta, page, setPage, reload } = usePaginated("/admin/payments", {
+  const { data, meta, setPage, reload } = usePaginated("/admin/payments", {
     params: { ...(statusFilter !== "all" && { status: statusFilter }), ...(query.trim() && { q: query.trim() }) },
   })
 

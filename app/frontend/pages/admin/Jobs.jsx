@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { api } from "../../lib/api"
 import Pagination from "../../components/Pagination"
 import { usePaginated } from "../../hooks/usePaginated"
 
@@ -136,7 +135,6 @@ function StatCard({ label, value, sub, warn }) {
 function JobRow({ job, now }) {
   const completedCount = job.job_tasks.filter((t) => t.completed).length
   const totalCount = job.job_tasks.length
-  const pct = totalCount ? Math.round((completedCount / totalCount) * 100) : 0
   const requested = new Date(job.created_at)
   const eClass = elapsedClass(job.created_at, now, job.job_status)
   const eStyle = ELAPSED_STYLES[eClass]

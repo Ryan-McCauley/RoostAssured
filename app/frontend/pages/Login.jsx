@@ -1,11 +1,14 @@
 import React, { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import { api } from "../lib/api"
 
 export default function Login() {
   const { setUser } = useAuth()
   const navigate = useNavigate()
+  // RequireAuth records where the visitor was headed before being bounced here.
+  const location = useLocation()
+  const destination = location.state?.from || "/"
   const [form, setForm] = useState({ email_address: "", password: "" })
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
@@ -19,7 +22,7 @@ export default function Login() {
     try {
       const result = await api.post("/session", form)
       setUser(result.user)
-      navigate("/")
+      navigate(destination)
     } catch (err) {
       setError(err.data?.errors?.join(", ") || "Try another email address or password.")
     } finally {
