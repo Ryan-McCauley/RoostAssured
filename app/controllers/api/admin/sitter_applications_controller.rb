@@ -1,7 +1,7 @@
 class Api::Admin::SitterApplicationsController < Api::AdminController
   def index
-    applications = SitterApplication.includes(:user).order(Arel.sql("status = 'pending' DESC"), created_at: :desc)
-    render json: { sitter_applications: applications.map(&:as_json_public) }
+    applications = SitterApplication.includes(:user, resume_attachment: :blob).order(Arel.sql("status = 'pending' DESC"), created_at: :desc)
+    render json: { sitter_applications: paginate(applications).map(&:as_json_public), meta: pagination_meta(applications) }
   end
 
   def approve

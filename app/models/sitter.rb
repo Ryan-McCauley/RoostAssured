@@ -48,22 +48,36 @@ class Sitter < ApplicationRecord
     within_range?(owner)
   end
 
-  def matching_job_requests
-    return User.none if deactivated?
-    return User.none if latitude.blank? || longitude.blank?
+  # Returns [owner, distance_miles] pairs, nearest first. Distance is computed once and handed back
+  # rather than recalculated by the caller for display.
+  def matching_job_requests_with_distance
+    return [] if deactivated?
+    return [] if latitude.blank? || longitude.blank?
 
-    accepted_owner_ids = bids.where(status: "accepted").pluck(:owner_id)
-    blocked_owner_ids = user.blocks_initiated.pluck(:blocked_user_id) + user.blocks_received.pluck(:blocker_id)
+    excluded_ids = [ user_id ] +
+                   bids.where(status: "accepted").pluck(:owner_id) +
+                   user.blocks_initiated.pluck(:blocked_user_id) +
+                   user.blocks_received.pluck(:blocker_id)
 
-    User.where.not(id: user_id)
-        .where.not(id: accepted_owner_ids)
-        .where.not(id: blocked_owner_ids)
+    User.where.not(id: excluded_ids)
         # Deliberately two clauses: `where.not(latitude: nil, longitude: nil)` compiles to
         # NOT (latitude IS NULL AND longitude IS NULL), which lets a half-geocoded row through.
         .where.not(latitude: nil).where.not(longitude: nil)
         .where("cardinality(sitting_dates) > 0")
-        .select { |owner| owner.upcoming_sitting_dates.any? && within_range?(owner) }
-        .sort_by { |owner| HaversineDistance.miles_between(latitude, longitude, owner.latitude, owner.longitude) }
+        # The box does the coarse work in SQL so only nearby rows are loaded; the exact circle test
+        # below still decides. Previously every geocoded owner in the table came into memory.
+        .within_bounding_box(latitude, longitude, travel_radius_miles)
+        .filter_map { |owner|
+          next unless owner.upcoming_sitting_dates.any?
+
+          distance = HaversineDistance.miles_between(latitude, longitude, owner.latitude, owner.longitude)
+          [ owner, distance ] if distance.present? && distance <= travel_radius_miles
+        }
+        .sort_by(&:last)
+  end
+
+  def matching_job_requests
+    matching_job_requests_with_distance.map(&:first)
   end
 
   def within_range?(owner)
@@ -71,15 +85,21 @@ class Sitter < ApplicationRecord
     distance.present? && distance <= travel_radius_miles
   end
 
-  def average_rating
-    rated = bids.where.not(rating: nil).pluck(:rating)
-    return nil if rated.empty?
+  # Both of these are called from as_json_public, so they run once per sitter in any list. Reading
+  # from the association when it has been preloaded turns two queries per sitter into none.
+  def rated_bids
+    bids.loaded? ? bids.select { |bid| bid.rating.present? } : bids.where.not(rating: nil)
+  end
 
-    (rated.sum.to_f / rated.size).round(1)
+  def average_rating
+    ratings = rated_bids.map(&:rating)
+    return nil if ratings.empty?
+
+    (ratings.sum.to_f / ratings.size).round(1)
   end
 
   def ratings_count
-    bids.where.not(rating: nil).count
+    rated_bids.size
   end
 
   def profile_photo_url

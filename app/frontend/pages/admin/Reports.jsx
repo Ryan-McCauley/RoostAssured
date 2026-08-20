@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react"
+import React from "react"
 import { api } from "../../lib/api"
+import Pagination from "../../components/Pagination"
+import { usePaginated } from "../../hooks/usePaginated"
 
 const STATUS_COLORS = {
   pending: { bg: "var(--amber-100)", fg: "var(--amber-900)" },
@@ -17,17 +19,12 @@ const REASON_LABELS = {
 }
 
 export default function Reports() {
-  const [reports, setReports] = useState(null)
-
-  useEffect(() => { api.get("/admin/reports").then((r) => setReports(r.reports)) }, [])
-
-  const updateReport = (updated) => {
-    setReports((prev) => prev.map((r) => (r.id === updated.id ? updated : r)))
-  }
+  const { data, meta, setPage, reload } = usePaginated("/admin/reports")
+  const reports = data?.reports
 
   const act = async (report, action) => {
-    const result = await api.post(`/admin/reports/${report.id}/${action}`)
-    updateReport(result.report)
+    await api.post(`/admin/reports/${report.id}/${action}`)
+    reload()
   }
 
   if (!reports) return <p>Loading…</p>
@@ -59,6 +56,7 @@ export default function Reports() {
           </tbody>
         </table>
       </div>
+      <Pagination meta={meta} onChange={setPage} />
     </div>
   )
 }

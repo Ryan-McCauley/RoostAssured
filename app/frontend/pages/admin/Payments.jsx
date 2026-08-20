@@ -1,5 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useState } from "react"
 import { api } from "../../lib/api"
+import Pagination from "../../components/Pagination"
+import { usePaginated } from "../../hooks/usePaginated"
+import { useDebounced } from "../../hooks/useDebounced"
 
 const STATUS_COLORS = {
   succeeded: { bg: "var(--emerald-100)", fg: "var(--emerald-900)" },
@@ -9,36 +12,24 @@ const STATUS_COLORS = {
 }
 
 export default function Payments() {
-  const [payments, setPayments] = useState(null)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  // Debounced so typing doesn't fire a request per keystroke now that search runs server-side.
+  const query = useDebounced(search, 300)
 
-  useEffect(() => { api.get("/admin/payments").then((r) => setPayments(r.payments)) }, [])
+  const { data, meta, page, setPage, reload } = usePaginated("/admin/payments", {
+    params: { ...(statusFilter !== "all" && { status: statusFilter }), ...(query.trim() && { q: query.trim() }) },
+  })
 
-  const updatePayment = (updated) => {
-    setPayments((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
-  }
+  const payments = data?.payments
+  // Totals come from the server, aggregated across every payment. Deriving them here would only
+  // describe the page currently on screen.
+  const stats = data?.stats
 
-  const stats = useMemo(() => {
-    if (!payments) return null
-    const succeeded = payments.filter((p) => p.status === "succeeded")
-    const pending = payments.filter((p) => p.status === "pending")
-    const failedOrRefunded = payments.filter((p) => p.status === "failed" || p.status === "refunded")
-    const volume = succeeded.reduce((sum, p) => sum + parseFloat(p.amount), 0)
-    return { volume, succeededCount: succeeded.length, pendingCount: pending.length, failedCount: failedOrRefunded.length, total: payments.length }
-  }, [payments])
+  const updatePayment = () => reload()
 
-  const filteredPayments = useMemo(() => {
-    if (!payments) return []
-    return payments.filter((p) => {
-      if (statusFilter !== "all" && p.status !== statusFilter) return false
-      if (search.trim()) {
-        const q = search.trim().toLowerCase()
-        if (!p.bid.owner.name.toLowerCase().includes(q) && !p.bid.sitter.name.toLowerCase().includes(q)) return false
-      }
-      return true
-    })
-  }, [payments, search, statusFilter])
+  // The server has already applied the filters and the page window.
+  const filteredPayments = payments || []
 
   if (!payments || !stats) return <p>Loading…</p>
 
@@ -50,10 +41,10 @@ export default function Payments() {
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(11.5rem, 1fr))", gap: "0.9rem", marginBottom: "1.5rem" }}>
-        <StatCard label="Total volume" value={`$${stats.volume.toFixed(2)}`} sub={`from ${stats.succeededCount} succeeded charges`} />
-        <StatCard label="Succeeded" value={stats.succeededCount} sub={`of ${stats.total} total charges`} />
-        <StatCard label="Pending" value={stats.pendingCount} sub="awaiting confirmation" />
-        <StatCard label="Failed / refunded" value={stats.failedCount} warn={stats.failedCount > 0} />
+        <StatCard label="Total volume" value={`$${stats.volume.toFixed(2)}`} sub={`from ${stats.succeeded_count} succeeded charges`} />
+        <StatCard label="Succeeded" value={stats.succeeded_count} sub={`of ${stats.total} total charges`} />
+        <StatCard label="Pending" value={stats.pending_count} sub="awaiting confirmation" />
+        <StatCard label="Failed / refunded" value={stats.failed_count} warn={stats.failed_count > 0} />
       </div>
 
       <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", alignItems: "center", marginBottom: "0.9rem" }}>
@@ -71,7 +62,7 @@ export default function Payments() {
           <option value="failed">Failed</option>
           <option value="refunded">Refunded</option>
         </select>
-        <span style={{ color: "var(--text-muted)", fontSize: "0.82rem", whiteSpace: "nowrap" }}>{filteredPayments.length} payment{filteredPayments.length === 1 ? "" : "s"}</span>
+        <span style={{ color: "var(--text-muted)", fontSize: "0.82rem", whiteSpace: "nowrap" }}>{(meta?.total_count ?? 0).toLocaleString()} payment{meta?.total_count === 1 ? "" : "s"}</span>
       </div>
 
       <div style={{ background: "var(--card-bg)", border: "1px solid var(--border)", borderRadius: "0.85rem", overflow: "auto" }}>
@@ -93,6 +84,7 @@ export default function Payments() {
             )}
           </tbody>
         </table>
+        <Pagination meta={meta} onChange={setPage} />
       </div>
     </div>
   )

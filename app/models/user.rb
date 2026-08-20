@@ -61,6 +61,14 @@ class User < ApplicationRecord
   after_save :mark_pending_bids_stale, if: :request_details_changed?
   after_save :send_new_request_emails, if: :newly_submitted_request?
 
+  # Narrows to a box in SQL before any Haversine work happens in Ruby. Without it, matching pulled
+  # every geocoded row in the table into memory on every job-requests page load.
+  scope :within_bounding_box, ->(latitude, longitude, miles) {
+    box = HaversineDistance.bounding_box(latitude, longitude, miles)
+    where(latitude: box[:min_latitude]..box[:max_latitude])
+      .where(longitude: box[:min_longitude]..box[:max_longitude])
+  }
+
   def sitter?
     sitter.present?
   end
@@ -101,9 +109,14 @@ class User < ApplicationRecord
 
     blocked_sitter_user_ids = blocks_initiated.pluck(:blocked_user_id) + blocks_received.pluck(:blocker_id)
 
+    # `includes(:user)` matters as much as the box here: Sitter delegates latitude/longitude to its
+    # user, so filtering in Ruby without it fired a query per candidate sitter.
     Sitter.where(deactivated_at: nil)
           .where.not(user_id: [ id ] + blocked_sitter_user_ids)
-          .select { |sitter| sitter.latitude.present? && sitter.longitude.present? && sitter.within_range?(self) }
+          .joins(:user)
+          .merge(User.within_bounding_box(latitude, longitude, Sitter::TRAVEL_RADII.max))
+          .includes(:user)
+          .select { |sitter| sitter.within_range?(self) }
   end
 
   def as_json_public
@@ -169,8 +182,7 @@ class User < ApplicationRecord
   def geocode_zip_code
     return if zip_code.blank?
 
-    result = NominatimGeocoder.geocode(zip_code)
-    update_columns(latitude: result.latitude, longitude: result.longitude) if result
+    GeocodeUserJob.perform_later(id)
   end
 
   def request_details_changed?
@@ -195,7 +207,6 @@ class User < ApplicationRecord
   end
 
   def send_new_request_emails
-    SittingRequestMailer.receipt(self).deliver_later
-    nearby_sitters.each { |sitter| SittingRequestMailer.new_request_alert(sitter, self).deliver_later }
+    NotifyNearbySittersJob.perform_later(id)
   end
 end

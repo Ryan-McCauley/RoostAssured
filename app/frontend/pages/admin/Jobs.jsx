@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { api } from "../../lib/api"
+import Pagination from "../../components/Pagination"
+import { usePaginated } from "../../hooks/usePaginated"
 
 const JOB_STATUS_LABELS = { not_started: "Not started", on_the_way: "On the way", in_progress: "In progress", completed: "Completed" }
 const JOB_STATUS_COLORS = {
@@ -32,26 +34,26 @@ const ELAPSED_STYLES = {
 }
 
 export default function Jobs() {
-  const [jobs, setJobs] = useState(null)
+  const { data, meta, setPage } = usePaginated("/admin/jobs")
+  const jobs = data?.jobs
   const [now, setNow] = useState(() => new Date().toISOString())
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
 
   useEffect(() => {
-    api.get("/admin/jobs").then((r) => setJobs(r.jobs))
     const interval = setInterval(() => setNow(new Date().toISOString()), 60000)
     return () => clearInterval(interval)
   }, [])
 
-  const stats = useMemo(() => {
-    if (!jobs) return null
-    const active = jobs.filter((j) => j.job_status !== "completed")
-    const completed = jobs.filter((j) => j.job_status === "completed")
-    const rated = jobs.filter((j) => j.rating)
-    const avgRating = rated.length ? (rated.reduce((sum, j) => sum + j.rating, 0) / rated.length).toFixed(1) : "—"
-    const flagged = jobs.filter((j) => j.stale)
-    return { activeCount: active.length, completedCount: completed.length, avgRating, ratedCount: rated.length, flaggedCount: flagged.length }
-  }, [jobs])
+  // Totals come from the server, computed over every accepted job.
+  const raw = data?.stats
+  const stats = raw && {
+    activeCount: raw.active_count,
+    completedCount: raw.completed_count,
+    avgRating: raw.average_rating ?? "—",
+    ratedCount: raw.rated_count,
+    flaggedCount: raw.flagged_count,
+  }
 
   const filteredJobs = useMemo(() => {
     if (!jobs) return []
@@ -116,6 +118,7 @@ export default function Jobs() {
           </tbody>
         </table>
       </div>
+      <Pagination meta={meta} onChange={setPage} />
     </div>
   )
 }

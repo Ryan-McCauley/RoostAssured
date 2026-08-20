@@ -6,7 +6,8 @@ class Api::Admin::WaitlistSignupsController < Api::AdminController
     top_zip_searches = ZipSearch.group(:zip_code).count.sort_by { |_, count| -count }.first(15)
 
     render json: {
-      waitlist_signups: waitlist_signups.as_json,
+      waitlist_signups: paginate(waitlist_signups).as_json,
+      meta: pagination_meta(waitlist_signups),
       top_referrers: top_referrers.as_json,
       counts_by_role: counts_by_role,
       top_zip_searches: top_zip_searches

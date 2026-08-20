@@ -16,9 +16,18 @@ class UserSittingRequestEmailsTest < ActiveSupport::TestCase
     @sitter.update!(travel_radius_miles: 25)
   end
 
+  test "posting a new request enqueues the notification rather than sending inline" do
+    # Matching every nearby sitter is not work to do inside the request that saved the request.
+    assert_enqueued_with(job: NotifyNearbySittersJob) do
+      @owner.update!(sitting_dates: [ Date.tomorrow ])
+    end
+  end
+
   test "posting a new request emails the owner a receipt and alerts nearby sitters" do
     assert_enqueued_emails 2 do
-      @owner.update!(sitting_dates: [ Date.tomorrow ])
+      perform_enqueued_jobs(only: NotifyNearbySittersJob) do
+        @owner.update!(sitting_dates: [ Date.tomorrow ])
+      end
     end
   end
 
@@ -26,7 +35,9 @@ class UserSittingRequestEmailsTest < ActiveSupport::TestCase
     @owner.update!(sitting_dates: [ Date.tomorrow ])
 
     assert_no_enqueued_emails do
-      @owner.update!(sitting_dates: [ Date.tomorrow, 2.days.from_now.to_date ])
+      perform_enqueued_jobs(only: NotifyNearbySittersJob) do
+        @owner.update!(sitting_dates: [ Date.tomorrow, 2.days.from_now.to_date ])
+      end
     end
   end
 
@@ -34,7 +45,9 @@ class UserSittingRequestEmailsTest < ActiveSupport::TestCase
     Block.create!(blocker: @owner, blocked_user: @sitter.user)
 
     assert_enqueued_emails 1 do
-      @owner.update!(sitting_dates: [ Date.tomorrow ])
+      perform_enqueued_jobs(only: NotifyNearbySittersJob) do
+        @owner.update!(sitting_dates: [ Date.tomorrow ])
+      end
     end
   end
 
@@ -43,7 +56,9 @@ class UserSittingRequestEmailsTest < ActiveSupport::TestCase
     @sitter.user.update_columns(latitude: 40.7128, longitude: -74.0060) # New York — far from Austin
 
     assert_enqueued_emails 1 do
-      @owner.update!(sitting_dates: [ Date.tomorrow ])
+      perform_enqueued_jobs(only: NotifyNearbySittersJob) do
+        @owner.update!(sitting_dates: [ Date.tomorrow ])
+      end
     end
   end
 end

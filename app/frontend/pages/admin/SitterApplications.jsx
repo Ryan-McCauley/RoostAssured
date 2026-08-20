@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import { api } from "../../lib/api"
+import Pagination from "../../components/Pagination"
+import { usePaginated } from "../../hooks/usePaginated"
 
 const STATUS_COLORS = {
   pending: { background: "var(--amber-50)", color: "var(--amber-700)" },
@@ -8,20 +10,17 @@ const STATUS_COLORS = {
 }
 
 export default function SitterApplications() {
-  const [applications, setApplications] = useState(null)
+  const { data, meta, setPage, reload } = usePaginated("/admin/sitter_applications")
+  const applications = data?.sitter_applications
   const [busyId, setBusyId] = useState(null)
   const [error, setError] = useState(null)
-
-  const load = () => api.get("/admin/sitter_applications").then((r) => setApplications(r.sitter_applications))
-
-  useEffect(() => { load() }, [])
 
   const decide = async (id, action) => {
     setBusyId(id)
     setError(null)
     try {
       await api.post(`/admin/sitter_applications/${id}/${action}`)
-      await load()
+      reload()
     } catch (err) {
       setError(err.data?.errors?.join(", ") || "Something went wrong.")
     } finally {
@@ -85,6 +84,7 @@ export default function SitterApplications() {
           ))}
         </tbody>
       </table>
+      <Pagination meta={meta} onChange={setPage} />
     </div>
   )
 }
