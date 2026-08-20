@@ -10,6 +10,16 @@
     <meta name="robots" content="index, follow">
     <%= csrf_meta_tags %>
 
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("roost-theme");
+          var theme = stored || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (e) {}
+      })();
+    </script>
+
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">

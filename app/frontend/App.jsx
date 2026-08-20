@@ -1,6 +1,7 @@
 import React from "react"
 import { Routes, Route } from "react-router-dom"
 import { AuthProvider } from "./context/AuthContext"
+import { ThemeProvider } from "./context/ThemeContext"
 import Layout from "./components/Layout"
 import Home from "./pages/Home"
 import Login from "./pages/Login"
@@ -8,6 +9,7 @@ import Signup from "./pages/Signup"
 import PasswordResetRequest from "./pages/PasswordResetRequest"
 import PasswordResetEdit from "./pages/PasswordResetEdit"
 import SitterShow from "./pages/SitterShow"
+import BecomeSitter from "./pages/BecomeSitter"
 import Account from "./pages/Account"
 import JobRequests from "./pages/JobRequests"
 import AdminLayout from "./pages/admin/AdminLayout"
@@ -20,9 +22,15 @@ import AdminSitterApplications from "./pages/admin/SitterApplications"
 import AdminSitters from "./pages/admin/Sitters"
 import AdminJobs from "./pages/admin/Jobs"
 import AdminPayments from "./pages/admin/Payments"
+import AdminReports from "./pages/admin/Reports"
+import TermsOfService from "./pages/legal/TermsOfService"
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy"
+import IndependentContractorDisclosure from "./pages/legal/IndependentContractorDisclosure"
+import BackgroundCheckDisclosure from "./pages/legal/BackgroundCheckDisclosure"
 
 export default function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
       <Layout>
         <Routes>
@@ -32,8 +40,13 @@ export default function App() {
           <Route path="/passwords/new" element={<PasswordResetRequest />} />
           <Route path="/passwords/:token/edit" element={<PasswordResetEdit />} />
           <Route path="/sitters/:id" element={<SitterShow />} />
+          <Route path="/become-a-sitter" element={<BecomeSitter />} />
           <Route path="/account" element={<Account />} />
           <Route path="/job_requests" element={<JobRequests />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/independent-contractor-disclosure" element={<IndependentContractorDisclosure />} />
+          <Route path="/background-check-disclosure" element={<BackgroundCheckDisclosure />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminWaitlistSignups />} />
             <Route path="waitlist_signups" element={<AdminWaitlistSignups />} />
@@ -45,10 +58,12 @@ export default function App() {
             <Route path="heatmap" element={<AdminHeatmap />} />
             <Route path="jobs" element={<AdminJobs />} />
             <Route path="payments" element={<AdminPayments />} />
+            <Route path="reports" element={<AdminReports />} />
           </Route>
           <Route path="*" element={<Home />} />
         </Routes>
       </Layout>
     </AuthProvider>
+    </ThemeProvider>
   )
 }

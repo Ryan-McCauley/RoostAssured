@@ -6,6 +6,7 @@ class Api::BidsController < ApplicationController
 
   before_action :require_sitter
   before_action :set_owner
+  before_action :ensure_not_blocked
 
   def create
     return render json: { errors: [ "You've already responded to this request." ] }, status: :unprocessable_entity if existing_bid
@@ -37,6 +38,10 @@ class Api::BidsController < ApplicationController
 
   def set_owner
     @owner = User.find(params[:owner_id])
+  end
+
+  def ensure_not_blocked
+    render json: { errors: [ "You can't interact with this user." ] }, status: :forbidden if current_user.blocked?(@owner)
   end
 
   def existing_bid

@@ -13,8 +13,14 @@ gem "vite_rails"
 # Handle Cross-Origin Resource Sharing for the API [https://github.com/cyu/rack-cors]
 gem "rack-cors"
 
+# Rate limit and throttle abusive requests [https://github.com/rack/rack-attack]
+gem "rack-attack"
+
 # Stripe Connect marketplace payments [https://github.com/stripe/stripe-ruby]
 gem "stripe", "~> 13.0"
+
+# HTTP client for the Checkr background check API (no official Ruby gem) [https://github.com/lostisland/faraday]
+gem "faraday"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1.7"

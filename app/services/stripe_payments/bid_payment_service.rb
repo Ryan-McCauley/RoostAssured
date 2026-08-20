@@ -3,10 +3,16 @@ module StripePayments
     class SitterNotOnboardedError < StandardError; end
     class NoPaymentMethodError < StandardError; end
     class SitterDeactivatedError < StandardError; end
+    class AlreadyPaidError < StandardError; end
 
     def charge!(bid)
       sitter = bid.sitter
       owner = bid.owner
+
+      # Second line of defence behind the row lock in ReceivedBidsController#accept: a bid that
+      # already has a live payment intent must never be charged again. Failed intents raise before
+      # a Payment row is written, so a genuine retry after a decline is still allowed through.
+      raise AlreadyPaidError, "This bid has already been paid for" if bid.payments.where(status: %w[pending succeeded]).exists?
 
       raise SitterDeactivatedError, "This sitter's account is no longer active" if sitter.deactivated?
       raise SitterNotOnboardedError, "This sitter hasn't finished setting up payouts yet" unless sitter.stripe_onboarded?

@@ -1,12 +1,13 @@
 class SitterApplication < ApplicationRecord
   TRAVEL_RADII = [5, 10, 15, 20, 25, 50].freeze
   STATUSES = %w[pending approved rejected].freeze
-  AVAILABILITY_DAYS = %w[Monday Tuesday Wednesday Thursday Friday].freeze
+  AVAILABILITY_DAYS = %w[Monday Tuesday Wednesday Thursday Friday Saturday Sunday].freeze
   AVAILABILITY_TIMES = %w[Morning Evening].freeze
   RESUME_CONTENT_TYPES = %w[application/pdf application/msword application/vnd.openxmlformats-officedocument.wordprocessingml.document].freeze
 
   belongs_to :user
   has_one_attached :resume
+  has_many :sitter_application_fees, dependent: :nullify
 
   validates :first_name, :last_name, presence: true
   validates :street_address, :city, :zip_code, presence: true
@@ -36,6 +37,18 @@ class SitterApplication < ApplicationRecord
     status == "rejected"
   end
 
+  def background_check_cleared?
+    background_check_status == "clear"
+  end
+
+  def background_check_pending?
+    %w[invited pending].include?(background_check_status)
+  end
+
+  def background_check_flagged?
+    %w[consider suspended dispute].include?(background_check_status)
+  end
+
   def as_json_public
     {
       id: id, email_address: email_address,
@@ -44,7 +57,7 @@ class SitterApplication < ApplicationRecord
       bio: bio, price_per_visit: price_per_visit, years_experience: years_experience,
       own_flock: own_flock, travel_radius_miles: travel_radius_miles,
       availability_days: availability_days, availability_times: availability_times,
-      background_check_consent: background_check_consent, status: status,
+      background_check_consent: background_check_consent, background_check_status: background_check_status, status: status,
       resume_filename: resume.attached? ? resume.filename.to_s : nil,
       resume_url: resume.attached? ? Rails.application.routes.url_helpers.rails_blob_path(resume, only_path: true) : nil,
       reviewed_at: reviewed_at, created_at: created_at

@@ -90,10 +90,13 @@ Rails.application.configure do
   config.active_record.attributes_for_inspect = [ :id ]
 
   # Enable DNS rebinding protection and other `Host` header attacks.
+  # These patterns MUST stay anchored with \A...\z: Rails matches them with Regexp#===, which
+  # searches anywhere in the string, so an unanchored /.*\.roostassured\.com/ would also accept
+  # a host like "foo.roostassured.com.attacker.example" and defeat the check entirely.
   config.hosts = [
     "roostassured.com",
-    /.*\.roostassured\.com/,
-    /.*\.onrender\.com/ # Render's default subdomain, useful before the custom domain is attached
+    /\A[a-z0-9-]+(\.[a-z0-9-]+)*\.roostassured\.com\z/i,
+    /\A[a-z0-9-]+(\.[a-z0-9-]+)*\.onrender\.com\z/i # Render's default subdomain, useful before the custom domain is attached
   ]
 
   # Skip DNS rebinding protection for the default health check endpoint.

@@ -16,6 +16,6 @@ export const SITTING_TYPES = [
 
 export const CARE_TASKS = ["Feed & water", "Collect eggs", "Welfare check", "Cleaning", "Give treats / supplements"]
 
-export const AVAILABILITY_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+export const AVAILABILITY_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 export const AVAILABILITY_TIMES = ["Morning", "Evening"]

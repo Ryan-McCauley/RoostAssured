@@ -26,7 +26,17 @@ module Authentication
     end
 
     def find_session_by_cookie
-      Session.find_by(id: cookies.signed[:session_id]) if cookies.signed[:session_id]
+      return unless (session_id = cookies.signed[:session_id])
+      return unless (session = Session.find_by(id: session_id))
+
+      if session.expired?
+        session.destroy
+        cookies.delete(:session_id)
+        return nil
+      end
+
+      session.touch_if_stale
+      session
     end
 
     def request_authentication
@@ -40,7 +50,14 @@ module Authentication
     def start_new_session_for(user)
       user.sessions.create!(user_agent: request.user_agent, ip_address: request.remote_ip).tap do |session|
         Current.session = session
-        cookies.signed.permanent[:session_id] = { value: session.id, httponly: true, same_site: :lax }
+        # `permanent` would pin this cookie 20 years out; it should not outlive the Session row.
+        cookies.signed[:session_id] = {
+          value: session.id,
+          httponly: true,
+          same_site: :lax,
+          secure: Rails.env.production?,
+          expires: Session::ABSOLUTE_TIMEOUT.from_now
+        }
       end
     end
 

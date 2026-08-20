@@ -8,6 +8,7 @@ launching in East Texas with a single sitter while demand data is collected.
 - Rails 8.1 (API), PostgreSQL, Solid Queue/Cache/Cable
 - React 19 + Vite frontend (`app/frontend`), served by the same Rails app
 - Stripe Connect for marketplace payments
+- Checkr for sitter background checks
 - Resend (SMTP) for transactional email
 - Hosted on Render (web service + Postgres + background worker)
 
@@ -41,12 +42,15 @@ Steps:
 3. Set the `sync: false` env vars in the Render dashboard for `roost-assured-web`
    (and `roost-assured-worker` where applicable): `RAILS_MASTER_KEY`,
    `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`,
+   `CHECKR_API_KEY`, `CHECKR_WEBHOOK_KEY`, `CHECKR_PACKAGE`,
    `RESEND_API_KEY`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`.
 4. Attach the `roostassured.com` custom domain to `roost-assured-web` and
    point its DNS at Render.
-5. Add the Stripe webhook endpoint (`https://roostassured.com/api/stripe_webhooks`)
+5. Add the Stripe webhook endpoint (`https://roostassured.com/api/stripe/webhooks`)
    in the Stripe dashboard and copy its signing secret into
    `STRIPE_WEBHOOK_SECRET`.
+6. Add the Checkr webhook endpoint (`https://roostassured.com/api/checkr/webhooks`)
+   in the Checkr dashboard and copy its signing key into `CHECKR_WEBHOOK_KEY`.
 
 Uploaded files (sitter photos, resumes) are stored on a Render persistent disk
 mounted at `/var/data` on the web service — see `config/storage.yml`.

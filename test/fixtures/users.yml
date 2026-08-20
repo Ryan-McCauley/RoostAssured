@@ -1,0 +1,19 @@
+owner_amy:
+  name: Amy Owner
+  email_address: amy@example.com
+  password_digest: <%= BCrypt::Password.create("password123") %>
+
+sitter_sam_user:
+  name: Sam Sitter
+  email_address: sam@example.com
+  password_digest: <%= BCrypt::Password.create("password123") %>
+
+applicant_jordan:
+  name: Jordan Applicant
+  email_address: jordan@example.com
+  password_digest: <%= BCrypt::Password.create("password123") %>
+
+prospective_taylor:
+  name: Taylor Prospect
+  email_address: taylor@example.com
+  password_digest: <%= BCrypt::Password.create("password123") %>

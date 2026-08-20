@@ -1,0 +1,4 @@
+sam:
+  user: sitter_sam_user
+  price_per_visit: 25.00
+  background_check_consent: true

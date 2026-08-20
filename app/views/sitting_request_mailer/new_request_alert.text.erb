@@ -1,0 +1,14 @@
+Hi <%= @sitter.name %>,
+
+<%= @user.name %> in <%= @user.city %>, <%= @user.state %> just posted a chicken sitting request within your
+travel radius. Bids are first-come, first-served, so take a look while it's fresh.
+
+Dates: <%= @user.upcoming_sitting_dates.map { |d| d.strftime("%b %-d") }.join(", ") %>
+<% if @user.care_tasks.present? -%>
+Care tasks: <%= (@user.care_tasks + [ @user.other_care_task ].compact).join(", ") %>
+<% end -%>
+Location: <%= @user.city %>, <%= @user.state %>
+
+View & bid on this request: <%= root_url.chomp('/') %>/job_requests
+
+— The Roost Assured team

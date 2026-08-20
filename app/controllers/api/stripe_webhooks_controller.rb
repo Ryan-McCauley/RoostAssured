@@ -15,6 +15,8 @@ class Api::StripeWebhooksController < ApplicationController
       handle_payment_intent(event.data.object, status: "succeeded")
     when "payment_intent.payment_failed"
       handle_payment_intent(event.data.object, status: "failed")
+    when "charge.refunded"
+      handle_charge_refunded(event.data.object)
     end
 
     head :ok
@@ -44,5 +46,12 @@ class Api::StripeWebhooksController < ApplicationController
 
     payment.update!(status: status)
     payment.bid.update!(status: "submitted") if status == "failed" && payment.bid.status == "accepted"
+  end
+
+  def handle_charge_refunded(charge)
+    payment = Payment.find_by(stripe_payment_intent_id: charge.payment_intent)
+    return unless payment
+
+    payment.update!(status: "refunded")
   end
 end

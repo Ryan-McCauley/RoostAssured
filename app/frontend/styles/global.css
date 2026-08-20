@@ -17,7 +17,7 @@
   --brand-amber: #d9a441;
   --brand-cream: #f6f2e6;
 
-  /* fixed dark palette, matching the mockup — the app does not support a light theme */
+  /* dark theme (default) */
   --page-bg: #17130f;
   --card-bg: #241f19;
   --text: #f3ede1;
@@ -27,7 +27,41 @@
   --amber-50: #2b2115;
   --amber-100: #3a2c19;
   --emerald-100: #113328;
+  --emerald-100-text: #6ee7b7;
   --red-100: #3a1a1a;
+  --red-100-text: #f3a5a5;
+}
+
+:root[data-theme="light"] {
+  --page-bg: #fbf9f5;
+  --card-bg: #ffffff;
+  --text: #241c15;
+  --text-muted: #6b6154;
+  --border: #e6e0d4;
+  --field-bg: #ffffff;
+  --amber-50: #fdf3e2;
+  --amber-100: #fbe6c4;
+  --emerald-100: #d9f0e6;
+  --emerald-100-text: #0f7a52;
+  --red-100: #fbdede;
+  --red-100-text: #9c2626;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --page-bg: #fbf9f5;
+    --card-bg: #ffffff;
+    --text: #241c15;
+    --text-muted: #6b6154;
+    --border: #e6e0d4;
+    --field-bg: #ffffff;
+    --amber-50: #fdf3e2;
+    --amber-100: #fbe6c4;
+    --emerald-100: #d9f0e6;
+    --emerald-100-text: #0f7a52;
+    --red-100: #fbdede;
+    --red-100-text: #9c2626;
+  }
 }
 
 * {
@@ -103,12 +137,12 @@ button {
 
 .flash-notice {
   background: var(--emerald-100);
-  color: var(--emerald-900);
+  color: var(--emerald-100-text);
 }
 
 .flash-alert {
   background: var(--red-100);
-  color: var(--red-900);
+  color: var(--red-100-text);
 }
 
 form input, form select, form textarea,
@@ -493,4 +527,235 @@ form label,
   .job-list-header {
     display: none;
   }
+}
+
+/* ---- hero search card (light card floating on the dark hero, Rover-style) ---- */
+
+.hero-search-card {
+  background: var(--brand-cream);
+  border-radius: 1rem;
+  padding: 1.75rem;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+  text-align: left;
+}
+
+.hero-search-label {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--brand-dark);
+  margin: 0 0 0.85rem;
+}
+
+.hero-care-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.hero-care-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  background: #ffffff;
+  border: 1.5px solid var(--stone-300);
+  border-radius: 0.6rem;
+  padding: 0.85rem 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--stone-700);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.hero-care-tile:disabled {
+  cursor: not-allowed;
+  color: var(--stone-500);
+  background: var(--stone-100);
+}
+
+.hero-care-tile.selected {
+  border-color: var(--brand-dark);
+  color: var(--brand-dark);
+}
+
+.hero-care-tile-badge {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.4rem;
+  background: var(--amber-500);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+}
+
+.hero-address-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.hero-address-fields {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 15rem;
+}
+
+.hero-address-row .field label {
+  color: var(--brand-dark);
+}
+
+.hero-address-row .field input {
+  background: #ffffff;
+  color: var(--brand-dark);
+  border-color: var(--stone-300);
+}
+
+.hero-address-row .field input:focus {
+  border-color: var(--amber-600);
+  outline-color: var(--amber-600);
+}
+
+.hero-search-btn {
+  white-space: nowrap;
+}
+
+.hero-teaser-bar {
+  background: #ffffff;
+  border-radius: 1rem;
+  margin-top: 1rem;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+.hero-teaser-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border-radius: 0.6rem;
+  background: var(--brand-dark);
+  color: var(--brand-amber);
+}
+
+.hero-teaser-badge {
+  background: var(--amber-500);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+}
+
+.hero-teaser-btn {
+  border-color: var(--stone-300) !important;
+  color: var(--brand-dark) !important;
+  flex-shrink: 0;
+}
+
+@media (max-width: 30rem) {
+  .hero-address-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-address-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-search-btn {
+    width: 100%;
+  }
+}
+
+/* ---- marketing landing page ---- */
+
+.service-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1.5rem;
+}
+
+.service-card {
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  border-radius: 0.85rem;
+  padding: 1.5rem;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.service-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--amber-500);
+}
+
+.mkt-cta {
+  padding: 4rem 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+@media (max-width: 40rem) {
+  .mkt-cta {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .mkt-cta-copy {
+    max-width: none !important;
+  }
+}
+
+/* ---- legal document pages ---- */
+
+.legal-prose h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 1.75rem 0 0.6rem;
+}
+
+.legal-prose h2:first-child {
+  margin-top: 0;
+}
+
+.legal-prose p {
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--text);
+  margin: 0 0 0.9rem;
+}
+
+.legal-prose ul {
+  margin: 0 0 0.9rem;
+  padding-left: 1.3rem;
+}
+
+.legal-prose li {
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--text);
+  margin-bottom: 0.4rem;
+}
+
+.legal-prose strong {
+  color: var(--text);
 }

@@ -28,13 +28,24 @@ class User < ApplicationRecord
   has_many :sessions, dependent: :destroy
   has_one :sitter, dependent: :destroy
   has_one :sitter_application, dependent: :destroy
+  has_many :sitter_application_fees, dependent: :destroy
   has_many :bids_received, class_name: "Bid", foreign_key: :owner_id, dependent: :destroy, inverse_of: :owner
+  has_many :blocks_initiated, class_name: "Block", foreign_key: :blocker_id, dependent: :destroy, inverse_of: :blocker
+  has_many :blocks_received, class_name: "Block", foreign_key: :blocked_user_id, dependent: :destroy, inverse_of: :blocked_user
+  has_many :reports_filed, class_name: "Report", foreign_key: :reporter_id, dependent: :destroy, inverse_of: :reporter
+  has_many :reports_received, class_name: "Report", foreign_key: :reported_user_id, dependent: :destroy, inverse_of: :reported_user
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
+
+  MINIMUM_PASSWORD_LENGTH = 8
 
   validates :name, presence: true
   validates :email_address, presence: true, uniqueness: { case_sensitive: false },
                              format: { with: URI::MailTo::EMAIL_REGEXP }
+  # has_secure_password only enforces presence and bcrypt's 72-byte ceiling, so without this a
+  # one-character password is accepted at both signup and password reset. allow_nil keeps it off
+  # the path of updates that don't touch the password.
+  validates :password, length: { minimum: MINIMUM_PASSWORD_LENGTH }, allow_nil: true
   validates :state, inclusion: { in: STATES.keys }, allow_blank: true
   validates :zip_code, format: { with: /\A\d{5}\z/, message: "must be a 5-digit ZIP code" }, allow_blank: true
   validates :flock_size_tier, inclusion: { in: FLOCK_SIZE_TIERS.keys }, allow_blank: true
@@ -48,9 +59,18 @@ class User < ApplicationRecord
 
   after_save :geocode_zip_code, if: :saved_change_to_zip_code?
   after_save :mark_pending_bids_stale, if: :request_details_changed?
+  after_save :send_new_request_emails, if: :newly_submitted_request?
 
   def sitter?
     sitter.present?
+  end
+
+  # Blocking is mutual — it doesn't matter who blocked whom, neither side should be able to
+  # bid, message, or match with the other afterward.
+  def blocked?(other_user)
+    return false unless other_user
+
+    blocks_initiated.exists?(blocked_user_id: other_user.id) || blocks_received.exists?(blocker_id: other_user.id)
   end
 
   def stripe_customer?
@@ -68,6 +88,18 @@ class User < ApplicationRecord
     sitting_dates.select { |d| d >= Date.current }
   end
 
+  # The inverse of Sitter#matching_job_requests — every active, non-blocked sitter whose travel
+  # radius covers this owner, used to alert sitters the moment a new request is posted nearby.
+  def nearby_sitters
+    return Sitter.none if latitude.blank? || longitude.blank?
+
+    blocked_sitter_user_ids = blocks_initiated.pluck(:blocked_user_id) + blocks_received.pluck(:blocker_id)
+
+    Sitter.where(deactivated_at: nil)
+          .where.not(user_id: [ id ] + blocked_sitter_user_ids)
+          .select { |sitter| sitter.latitude.present? && sitter.longitude.present? && sitter.within_range?(self) }
+  end
+
   def as_json_public
     {
       id: id, name: name, email_address: email_address, phone_number: phone_number, address: address,
@@ -81,9 +113,13 @@ class User < ApplicationRecord
     }
   end
 
+  # Shown to every sitter whose travel radius covers this owner, before any bid is accepted, so it
+  # deliberately omits phone_number and street address — those are released only once the owner
+  # accepts a bid, via Bid#as_json_public. latitude/longitude are the ZIP centroid from
+  # geocode_zip_code, not the house, so the map stays useful without pinpointing the address.
   def as_job_request_json(distance_miles: nil, bid: nil)
     {
-      id: id, name: name, phone_number: phone_number, address: address,
+      id: id, name: name,
       city: city, state: state, zip_code: zip_code, latitude: latitude, longitude: longitude,
       distance_miles: distance_miles&.round(1),
       flock_size_tier: flock_size_tier, coop_features: coop_features, sitting_type: sitting_type,
@@ -144,5 +180,16 @@ class User < ApplicationRecord
 
     Bid.where(id: affected.map(&:id)).update_all(stale: true)
     affected.each { |bid| BidMailer.request_edited(bid).deliver_later }
+  end
+
+  # True only the moment a request first goes from no dates to some dates — not on every
+  # subsequent edit, so the owner and nearby sitters aren't re-notified for every tweak.
+  def newly_submitted_request?
+    saved_change_to_sitting_dates? && sitting_dates.present? && Array(sitting_dates_before_last_save).empty?
+  end
+
+  def send_new_request_emails
+    SittingRequestMailer.receipt(self).deliver_later
+    nearby_sitters.each { |sitter| SittingRequestMailer.new_request_alert(sitter, self).deliver_later }
   end
 end

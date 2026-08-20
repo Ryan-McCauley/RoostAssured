@@ -1,5 +1,5 @@
 class Sitter < ApplicationRecord
-  TRAVEL_RADII = [5, 10, 15, 20, 25, 50].freeze
+  TRAVEL_RADII = [ 5, 10, 15, 20, 25, 50 ].freeze
   PROFILE_PHOTO_CONTENT_TYPES = %w[image/jpeg image/png image/webp image/heic image/heif].freeze
 
   belongs_to :user
@@ -42,9 +42,11 @@ class Sitter < ApplicationRecord
     return User.none if latitude.blank? || longitude.blank?
 
     accepted_owner_ids = bids.where(status: "accepted").pluck(:owner_id)
+    blocked_owner_ids = user.blocks_initiated.pluck(:blocked_user_id) + user.blocks_received.pluck(:blocker_id)
 
     User.where.not(id: user_id)
         .where.not(id: accepted_owner_ids)
+        .where.not(id: blocked_owner_ids)
         .where.not(latitude: nil, longitude: nil)
         .where("cardinality(sitting_dates) > 0")
         .select { |owner| owner.upcoming_sitting_dates.any? && within_range?(owner) }
@@ -73,7 +75,7 @@ class Sitter < ApplicationRecord
 
   def as_json_public
     {
-      id: id, name: name, city: city, state: state, zip_code: zip_code,
+      id: id, user_id: user_id, name: name, city: city, state: state, zip_code: zip_code,
       bio: bio, price_per_visit: price_per_visit, years_experience: years_experience,
       own_flock: own_flock, travel_radius_miles: travel_radius_miles,
       background_check_consent: background_check_consent, created_at: created_at,

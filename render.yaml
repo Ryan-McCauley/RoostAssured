@@ -48,6 +48,12 @@ services:
         sync: false
       - key: MAILER_FROM
         value: "Roost Assured <hello@roostassured.com>"
+      - key: CHECKR_API_KEY
+        sync: false
+      - key: CHECKR_WEBHOOK_KEY
+        sync: false
+      - key: CHECKR_PACKAGE
+        sync: false
 
   - type: worker
     name: roost-assured-worker

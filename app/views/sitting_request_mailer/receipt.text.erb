@@ -1,0 +1,15 @@
+Hi <%= @user.name %>,
+
+We've posted your care request for <%= pluralize(@user.upcoming_sitting_dates.count, "day") %>, starting
+<%= @user.upcoming_sitting_dates.first&.strftime("%B %-d, %Y") %>. Nearby sitters have been alerted and can start
+bidding right away — we'll email you as soon as one does.
+
+Dates: <%= @user.upcoming_sitting_dates.map { |d| d.strftime("%b %-d") }.join(", ") %>
+<% if @user.care_tasks.present? -%>
+Care tasks: <%= (@user.care_tasks + [ @user.other_care_task ].compact).join(", ") %>
+<% end -%>
+Location: <%= @user.city %>, <%= @user.state %>
+
+View your request: <%= root_url %>
+
+— The Roost Assured team

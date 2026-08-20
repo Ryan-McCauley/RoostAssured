@@ -1,4 +1,12 @@
-You can reset your password on
-<%= edit_password_url(@user.password_reset_token) %>
+Reset your password
 
-This link will expire in <%= distance_of_time_in_words(0, @user.password_reset_token_expires_in) %>.
+We got a request to reset the password on your Roost Assured account. Use the
+link below to choose a new one:
+
+<%= "#{root_url.chomp('/')}/passwords/#{@user.password_reset_token}/edit" %>
+
+This link expires in <%= distance_of_time_in_words(0, @user.password_reset_token_expires_in) %>.
+
+If you didn't request this, you can safely ignore this email — your password won't change.
+
+— The Roost Assured team

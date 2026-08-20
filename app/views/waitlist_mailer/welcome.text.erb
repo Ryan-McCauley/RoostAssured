@@ -1,23 +1,24 @@
+You're an early bird 🐣
+
 Hi there,
 
-You're on the Roost Assured waitlist. We're rolling out area by area,
-and we'll email you the moment we're live near you.
+Thanks for signing up early — you've got a spot reserved on the Roost
+Assured waitlist. We're launching area by area, and being on this list
+means you'll be the first to know the moment we're live near <%= @waitlist_signup.city.present? ? @waitlist_signup.city : "you" %>.
 
-<% if @waitlist_signup.looking_for_sitter? && @available_sitters.any? -%>
-<% if @waitlist_signup.sitting_start_date.present? -%>
-Good news — <%= pluralize(@available_sitters.count, "sitter") %> already available near <%= @waitlist_signup.city %>, <%= @waitlist_signup.state %> for your dates. We'll follow up separately to help make the connection.
-<% else -%>
-Good news — <%= pluralize(@available_sitters.count, "sitter") %> already active near <%= @waitlist_signup.city %>, <%= @waitlist_signup.state %>. We'll follow up separately to help make the connection.
-<% end -%>
+<% if @waitlist_signup.looking_for_sitter? -%>
+We'll email you the moment we're active near <%= @waitlist_signup.city %>, <%= @waitlist_signup.state %>, with vetted, background-checked sitters ready to meet your flock.
 
 <% end -%>
-Want to move up the list and help us launch sooner? Share your personal
-link with any neighbor who keeps chickens or would enjoy sitting for them:
+Want to hatch this sooner?
+
+Every neighbor you refer moves you up the list. Share your personal link
+with anyone who keeps chickens or would enjoy sitting for them:
 
 <%= @referral_url %>
 
 <% if @waitlist_signup.referrals_count.positive? -%>
-<%= pluralize(@waitlist_signup.referrals_count, "neighbor") %> has already joined thanks to you. Thank you!
+<%= pluralize(@waitlist_signup.referrals_count, "neighbor") %> already joined thanks to you — you're helping us get to your coop faster.
 <% end -%>
 
 — The Roost Assured team

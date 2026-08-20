@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import { api } from "../lib/api"
 import { STATES, FLOCK_SIZE_TIERS, COOP_FEATURES, SITTING_TYPES, CARE_TASKS } from "../lib/flockOptions"
@@ -19,7 +19,7 @@ const initialForm = {
   feeder_count: "", waterer_count: "", feed_location: "", water_location: "",
   special_requests: "",
   name: "", email_address: "", phone_number: "", address: "", password: "", password_confirmation: "",
-  sitting_dates: [],
+  sitting_dates: [], agreed_to_terms: false,
 }
 
 export default function Signup() {
@@ -48,6 +48,7 @@ export default function Signup() {
         return "Please fill in every field."
       }
       if (form.password !== form.password_confirmation) return "Passwords don't match."
+      if (!form.agreed_to_terms) return "You must agree to the Terms of Service and Privacy Policy to continue."
     }
     return null
   }
@@ -71,7 +72,7 @@ export default function Signup() {
     setSubmitting(true)
     setErrors([])
     try {
-      const { sitting_dates, ...rest } = form
+      const { sitting_dates, agreed_to_terms, ...rest } = form
       const result = await api.post("/registration", { user: rest })
       setUser(result.user)
       setErrors([])
@@ -305,9 +306,20 @@ export default function Signup() {
                 <label htmlFor="password">Password</label>
                 <input id="password" type="password" name="password" value={form.password} onChange={handleChange} />
               </div>
-              <div className="field" style={{ marginBottom: 0 }}>
+              <div className="field">
                 <label htmlFor="password_confirmation">Confirm password</label>
                 <input id="password_confirmation" type="password" name="password_confirmation" value={form.password_confirmation} onChange={handleChange} />
+              </div>
+              <div className="field" style={{ marginBottom: 0, display: "flex", alignItems: "flex-start", gap: "0.5rem" }}>
+                <input
+                  id="agreed_to_terms" type="checkbox" style={{ width: "auto", marginTop: "0.2rem" }}
+                  checked={form.agreed_to_terms}
+                  onChange={(e) => setForm({ ...form, agreed_to_terms: e.target.checked })}
+                />
+                <label htmlFor="agreed_to_terms" style={{ marginBottom: 0, fontWeight: 400 }}>
+                  I agree to the <Link to="/terms" target="_blank" style={{ textDecoration: "underline" }}>Terms of Service</Link> and{" "}
+                  <Link to="/privacy" target="_blank" style={{ textDecoration: "underline" }}>Privacy Policy</Link>.
+                </label>
               </div>
             </>
           )}
