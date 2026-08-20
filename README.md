@@ -13,6 +13,17 @@ probably the most useful thing in this repository.
 
 The code is kept public as a work sample. It runs, it is tested, and CI is green.
 
+## Screenshots
+
+| Owner landing page | Sitter recruitment |
+|---|---|
+| ![Home](docs/screenshots/home.png) | ![Become a sitter](docs/screenshots/become-a-sitter.png) |
+
+The theme is resolved before first paint by a small nonced inline script, so there is no flash of
+the wrong palette:
+
+![Home in dark mode](docs/screenshots/home-dark.png)
+
 ## What's interesting in here
 
 If you are reading this to evaluate the code, these are the parts worth opening:
