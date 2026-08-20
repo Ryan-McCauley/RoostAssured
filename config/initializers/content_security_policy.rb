@@ -39,6 +39,14 @@ Rails.application.configure do
     end
   end
 
+  # The layout carries one inline <script>: the theme resolver that has to run before first paint,
+  # which is exactly why it can't be moved into the bundle. Under `script_src :self` the browser
+  # refused it in production, so `data-theme` was never set, ThemeContext fell back to "dark", and
+  # a light-mode user got a dark flash on every load -- the flash the script exists to prevent.
+  # A per-response nonce admits that one tag without opening the policy to inline script generally.
+  config.content_security_policy_nonce_generator = ->(request) { request.session.id.to_s.presence || SecureRandom.base64(16) }
+  config.content_security_policy_nonce_directives = %w[script-src]
+
   # Report violations without enforcing the policy.
   config.content_security_policy_report_only = false
 end

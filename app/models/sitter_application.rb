@@ -49,6 +49,27 @@ class SitterApplication < ApplicationRecord
     %w[consider suspended dispute].include?(background_check_status)
   end
 
+  # Approval creates a live sitter who will be sent to strangers' homes, which is the entire reason
+  # the $50 fee and the Checkr integration exist. These predicates were defined but never consulted
+  # anywhere, so an applicant whose report came back `consider` or `suspended` could be approved
+  # with one click and no warning. Approval now requires a clear report, or an explicit override
+  # that gets recorded on the application.
+  def approvable?(override: false)
+    background_check_cleared? || override
+  end
+
+  def approval_blocked_reason
+    return nil if background_check_cleared?
+
+    if background_check_pending?
+      "This applicant's background check hasn't come back yet."
+    elsif background_check_flagged?
+      "This applicant's background check came back \"#{background_check_status}\". Approving anyway requires an explicit override."
+    else
+      "This applicant has no completed background check."
+    end
+  end
+
   def as_json_public
     {
       id: id, email_address: email_address,

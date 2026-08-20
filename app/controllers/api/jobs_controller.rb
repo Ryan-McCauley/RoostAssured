@@ -14,10 +14,12 @@ class Api::JobsController < ApplicationController
     send_on_the_way_email = new_status == "on_the_way" && @job.on_the_way_at.blank?
     attrs = { job_status: new_status }
     attrs[:estimated_arrival_at] = parsed_eta if new_status == "on_the_way" && params.key?(:estimated_arrival_at)
+    # Folded into the same update rather than a follow-up update_column, which skipped validation
+    # and left updated_at stale.
+    attrs[:on_the_way_at] = Time.current if send_on_the_way_email
 
     if @job.update(attrs)
       if send_on_the_way_email
-        @job.update_column(:on_the_way_at, Time.current)
         BidMailer.on_the_way(@job).deliver_later
       end
       render json: { job: @job.as_json_public }

@@ -2,7 +2,10 @@ require "net/http"
 
 class NominatimGeocoder
   ENDPOINT = "https://nominatim.openstreetmap.org/search".freeze
-  USER_AGENT = "RoostAssured/1.0 (contact: rmccauleycode@gmail.com)".freeze
+  # Nominatim's usage policy requires a contact address on every request. Read from the
+  # environment so a public repo doesn't ship a personal inbox.
+  CONTACT = ENV.fetch("GEOCODER_CONTACT_EMAIL", "hello@roostassured.com").freeze
+  USER_AGENT = "RoostAssured/1.0 (contact: #{CONTACT})".freeze
   TIMEOUT = 3
 
   Result = Struct.new(:latitude, :longitude)

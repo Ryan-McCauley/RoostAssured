@@ -93,9 +93,10 @@ Rails.application.configure do
   # These patterns MUST stay anchored with \A...\z: Rails matches them with Regexp#===, which
   # searches anywhere in the string, so an unanchored /.*\.roostassured\.com/ would also accept
   # a host like "foo.roostassured.com.attacker.example" and defeat the check entirely.
+  app_host = ENV.fetch("APP_HOST", "roostassured.com")
   config.hosts = [
-    "roostassured.com",
-    /\A[a-z0-9-]+(\.[a-z0-9-]+)*\.roostassured\.com\z/i,
+    app_host,
+    /\A[a-z0-9-]+(\.[a-z0-9-]+)*\.#{Regexp.escape(app_host)}\z/i,
     /\A[a-z0-9-]+(\.[a-z0-9-]+)*\.onrender\.com\z/i # Render's default subdomain, useful before the custom domain is attached
   ]
 

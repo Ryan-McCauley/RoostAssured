@@ -6,7 +6,7 @@ class Api::BidsController < ApplicationController
 
   before_action :require_sitter
   before_action :set_owner
-  before_action :ensure_not_blocked
+  before_action :ensure_eligible_to_bid
 
   def create
     return render json: { errors: [ "You've already responded to this request." ] }, status: :unprocessable_entity if existing_bid
@@ -40,8 +40,16 @@ class Api::BidsController < ApplicationController
     @owner = User.find(params[:owner_id])
   end
 
-  def ensure_not_blocked
-    render json: { errors: [ "You can't interact with this user." ] }, status: :forbidden if current_user.blocked?(@owner)
+  # Eligibility was previously only enforced by the query behind the job-requests index, so a
+  # sitter could POST a bid at any user id in the database -- someone outside their travel radius,
+  # or someone who never posted a request at all -- and it would land in that user's bid list.
+  # Editing an existing bid stays allowed even if eligibility has since lapsed, so a sitter can
+  # still revise a bid on a request whose dates moved.
+  def ensure_eligible_to_bid
+    return if existing_bid
+    return if @sitter.can_bid_on?(@owner)
+
+    render json: { errors: [ "This request isn't open to you." ] }, status: :forbidden
   end
 
   def existing_bid

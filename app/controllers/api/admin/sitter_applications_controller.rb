@@ -7,6 +7,10 @@ class Api::Admin::SitterApplicationsController < Api::AdminController
   def approve
     application = SitterApplication.find(params[:id])
 
+    unless application.approvable?(override: override_requested?)
+      return render json: { errors: [ application.approval_blocked_reason ] }, status: :unprocessable_entity
+    end
+
     ActiveRecord::Base.transaction do
       sitter = application.user.sitter || application.user.build_sitter
       sitter.assign_attributes(
@@ -16,7 +20,11 @@ class Api::Admin::SitterApplicationsController < Api::AdminController
         background_check_consent: application.background_check_consent
       )
       sitter.save!
-      application.update!(status: "approved", reviewed_at: Time.current)
+      application.update!(
+        status: "approved",
+        reviewed_at: Time.current,
+        approved_despite_background_check: override_requested? && !application.background_check_cleared?
+      )
     end
 
     begin
@@ -28,6 +36,12 @@ class Api::Admin::SitterApplicationsController < Api::AdminController
     render json: { sitter_application: application.as_json_public }
   rescue ActiveRecord::RecordInvalid => e
     render_errors(e.record)
+  end
+
+  # An override is a deliberate, recorded act rather than the default. The flag is persisted on the
+  # application so "who approved a sitter whose check wasn't clear, and when" is answerable later.
+  def override_requested?
+    ActiveModel::Type::Boolean.new.cast(params[:override_background_check]).present?
   end
 
   def reject

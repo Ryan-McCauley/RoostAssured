@@ -10,7 +10,9 @@
     <meta name="robots" content="index, follow">
     <%= csrf_meta_tags %>
 
-    <script>
+    <%# Inline on purpose: this must run before first paint to avoid a flash of the wrong theme,
+        which a bundled module cannot do. Carries the CSP nonce so it survives script-src :self. %>
+    <script nonce="<%= content_security_policy_nonce %>">
       (function () {
         try {
           var stored = localStorage.getItem("roost-theme");

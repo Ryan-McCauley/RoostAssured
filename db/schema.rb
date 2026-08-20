@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_19_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_19_120200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -187,6 +187,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_120100) do
   end
 
   create_table "sitter_applications", force: :cascade do |t|
+    t.boolean "approved_despite_background_check", default: false, null: false
     t.string "availability_days", default: [], null: false, array: true
     t.string "availability_times", default: [], null: false, array: true
     t.boolean "background_check_consent", default: false, null: false

@@ -23,4 +23,18 @@ class Api::ReportsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
   end
+
+  test "a bid the reporter is not party to is not attached to the report" do
+    outsider = User.create!(name: "Outsider", email_address: "outsider@example.com", password: "password123")
+    # A bid between two other people entirely -- the logged-in reporter is on neither side of it.
+    someone_elses_bid = Bid.create!(sitter: sitters(:sam), owner: outsider, amount: 25, status: "submitted")
+
+    post "/api/reports", params: {
+      reported_user_id: outsider.id, bid_id: someone_elses_bid.id, reason: "spam", details: "x"
+    }, as: :json
+
+    assert_response :success
+    # bid_id used to come straight off the params, so a report could cite any bid in the system.
+    assert_nil Report.order(:id).last.bid_id
+  end
 end

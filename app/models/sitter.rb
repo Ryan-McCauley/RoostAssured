@@ -37,6 +37,17 @@ class Sitter < ApplicationRecord
     update!(deactivated_at: nil)
   end
 
+  # Whether this sitter is allowed to bid on a given owner at all. The bid endpoints derive
+  # authorization from this rather than trusting the owner_id in the URL -- otherwise eligibility
+  # is only ever enforced by the query that builds the index page, and anyone can POST around it.
+  def can_bid_on?(owner)
+    return false if deactivated? || owner.nil? || owner.id == user_id
+    return false if user.blocked?(owner)
+    return false if owner.upcoming_sitting_dates.empty?
+
+    within_range?(owner)
+  end
+
   def matching_job_requests
     return User.none if deactivated?
     return User.none if latitude.blank? || longitude.blank?
@@ -47,7 +58,9 @@ class Sitter < ApplicationRecord
     User.where.not(id: user_id)
         .where.not(id: accepted_owner_ids)
         .where.not(id: blocked_owner_ids)
-        .where.not(latitude: nil, longitude: nil)
+        # Deliberately two clauses: `where.not(latitude: nil, longitude: nil)` compiles to
+        # NOT (latitude IS NULL AND longitude IS NULL), which lets a half-geocoded row through.
+        .where.not(latitude: nil).where.not(longitude: nil)
         .where("cardinality(sitting_dates) > 0")
         .select { |owner| owner.upcoming_sitting_dates.any? && within_range?(owner) }
         .sort_by { |owner| HaversineDistance.miles_between(latitude, longitude, owner.latitude, owner.longitude) }
