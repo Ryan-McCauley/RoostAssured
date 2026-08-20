@@ -1,5 +1,5 @@
 class Api::ReceivedBidsController < ApplicationController
-  before_action :set_bid, only: [:accept, :reject, :rate]
+  before_action :set_bid, only: [ :accept, :reject, :rate ]
 
   def index
     bids = current_user.bids_received.where.not(status: "passed").order(created_at: :desc)
@@ -33,9 +33,9 @@ class Api::ReceivedBidsController < ApplicationController
     render json: { bids: current_user.bids_received.where.not(status: "passed").order(created_at: :desc).map(&:as_owner_json) }
   rescue StripePayments::BidPaymentService::SitterNotOnboardedError, StripePayments::BidPaymentService::NoPaymentMethodError,
          StripePayments::BidPaymentService::SitterDeactivatedError, StripePayments::BidPaymentService::AlreadyPaidError => e
-    render json: { errors: [e.message] }, status: :unprocessable_entity
+    render json: { errors: [ e.message ] }, status: :unprocessable_entity
   rescue ::Stripe::CardError, ::Stripe::StripeError => e
-    render json: { errors: [e.message] }, status: :unprocessable_entity
+    render json: { errors: [ e.message ] }, status: :unprocessable_entity
   end
 
   def reject

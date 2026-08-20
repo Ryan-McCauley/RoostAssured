@@ -8,6 +8,6 @@ class CreateAvailabilities < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :availabilities, [:start_date, :end_date]
+    add_index :availabilities, [ :start_date, :end_date ]
   end
 end

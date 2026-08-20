@@ -3,11 +3,11 @@ class User < ApplicationRecord
     "Small" => { range: "0-12", description: "A starter flock — easy to keep track of by name." },
     "Medium" => { range: "13-25", description: "A well-established backyard flock." },
     "Large" => { range: "26-50", description: "Serious hobbyist territory — probably selling eggs." },
-    "Jumbo" => { range: "51+", description: "Small-farm scale — a sitter should have real flock experience." },
+    "Jumbo" => { range: "51+", description: "Small-farm scale — a sitter should have real flock experience." }
   }.freeze
-  COOP_FEATURES = ["Automatic door", "Manual door", "Free range", "Tractor / mobile", "Fully enclosed", "Electric fence"].freeze
-  SITTING_TYPES = ["Temporary sitter", "Recurring help & maintenance"].freeze
-  CARE_TASKS = ["Feed & water", "Collect eggs", "Welfare check", "Cleaning", "Give treats / supplements"].freeze
+  COOP_FEATURES = [ "Automatic door", "Manual door", "Free range", "Tractor / mobile", "Fully enclosed", "Electric fence" ].freeze
+  SITTING_TYPES = [ "Temporary sitter", "Recurring help & maintenance" ].freeze
+  CARE_TASKS = [ "Feed & water", "Collect eggs", "Welfare check", "Cleaning", "Give treats / supplements" ].freeze
   REQUEST_DETAIL_ATTRIBUTES = %w[care_tasks other_care_task special_requests sitting_dates].freeze
 
   STATES = {

@@ -8,6 +8,10 @@
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
 
+# Shared password for every seeded development account. Never reachable in production — every
+# block that uses it is guarded by `Rails.env.local?`.
+SEED_PASSWORD = "password123".freeze
+
 # Launch region: East Texas, where Roost Assured is first going live.
 [
   { name: "Gilmer, Tx", latitude: 32.728803, longitude: -94.944557, radius_miles: 25 },
@@ -21,25 +25,33 @@
   end
 end
 
-# A handful of real sitters in the launch region so "active service area" pages have live data to show.
-[
-  { name: "Marisol Reyes", email_address: "marisol@example.com", city: "Gilmer", state: "TX", zip_code: "75644",
-    price_per_visit: 18, years_experience: 4, own_flock: true, travel_radius_miles: 15,
-    bio: "Raised chickens my whole life — happy to keep an eye on your flock." },
-  { name: "Dale Whitfield", email_address: "dale@example.com", city: "Longview", state: "TX", zip_code: "75601",
-    price_per_visit: 22, years_experience: 7, own_flock: true, travel_radius_miles: 20,
-    bio: "Retired vet tech, currently keeping 12 hens of my own." },
-  { name: "Priya Patel", email_address: "priya@example.com", city: "Gladewater", state: "TX", zip_code: "75647",
-    price_per_visit: 15, years_experience: 2, own_flock: false, travel_radius_miles: 10,
-    bio: "Weekend chicken sitter, flexible schedule, great with skittish birds." }
-].each do |attrs|
-  user_attrs = attrs.slice(:name, :email_address, :city, :state, :zip_code)
-  sitter_attrs = attrs.slice(:price_per_visit, :years_experience, :own_flock, :travel_radius_miles, :bio)
+# Fictional sitters so "active service area" pages have something to render locally.
+#
+# Development and test only. These accounts share a well-known password and are created as
+# already-approved sitters, bypassing the application, fee, and background-check flow — seeding
+# them into production would hand out three live logins. `bin/rails db:prepare` seeds whenever it
+# creates the database, which on a fresh Render deploy means production, so the guard is load
+# bearing rather than tidiness.
+if Rails.env.local?
+  [
+    { name: "Marisol Reyes", email_address: "marisol@example.com", city: "Gilmer", state: "TX", zip_code: "75644",
+      price_per_visit: 18, years_experience: 4, own_flock: true, travel_radius_miles: 15,
+      bio: "Raised chickens my whole life — happy to keep an eye on your flock." },
+    { name: "Dale Whitfield", email_address: "dale@example.com", city: "Longview", state: "TX", zip_code: "75601",
+      price_per_visit: 22, years_experience: 7, own_flock: true, travel_radius_miles: 20,
+      bio: "Retired vet tech, currently keeping 12 hens of my own." },
+    { name: "Priya Patel", email_address: "priya@example.com", city: "Gladewater", state: "TX", zip_code: "75647",
+      price_per_visit: 15, years_experience: 2, own_flock: false, travel_radius_miles: 10,
+      bio: "Weekend chicken sitter, flexible schedule, great with skittish birds." }
+  ].each do |attrs|
+    user_attrs = attrs.slice(:name, :email_address, :city, :state, :zip_code)
+    sitter_attrs = attrs.slice(:price_per_visit, :years_experience, :own_flock, :travel_radius_miles, :bio)
 
-  user = User.find_or_create_by!(email_address: user_attrs[:email_address]) do |u|
-    u.assign_attributes(user_attrs.merge(password: "password123"))
+    user = User.find_or_create_by!(email_address: user_attrs[:email_address]) do |u|
+      u.assign_attributes(user_attrs.merge(password: SEED_PASSWORD))
+    end
+    user.create_sitter!(sitter_attrs.merge(background_check_consent: true)) unless user.sitter
   end
-  user.create_sitter!(sitter_attrs.merge(background_check_consent: true)) unless user.sitter
 end
 
 # Continental US bounding box — coordinates don't need to match the fake city exactly,
@@ -294,7 +306,7 @@ if Rails.env.development? && seed_owners_need_rebuild
   request_owner_indexes = Array.new(TOTAL_JOB_REQUESTS) { rand(TOTAL_SEED_USERS) }
   requests_by_owner = request_owner_indexes.group_by(&:itself)
 
-  HAZARDS = ["hawks circling this spring", "a raccoon that's figured out the latch", "a dog next door that barks at the coop", "a fox sighting last month"].freeze
+  HAZARDS = [ "hawks circling this spring", "a raccoon that's figured out the latch", "a dog next door that barks at the coop", "a fox sighting last month" ].freeze
 
   # Skip the live geocoding callback for this bulk insert — we already have real lat/lng
   # for each chosen city, and hitting Nominatim 100+ times here would be slow and likely
@@ -309,8 +321,8 @@ if Rails.env.development? && seed_owners_need_rebuild
         user = User.create!(
           name: Faker::Name.name,
           email_address: "seed_owner_#{i}@example.com",
-          password: "password123",
-          password_confirmation: "password123",
+          password: SEED_PASSWORD,
+          password_confirmation: SEED_PASSWORD,
           phone_number: Faker::PhoneNumber.cell_phone,
           address: Faker::Address.street_address,
           city: city_name,

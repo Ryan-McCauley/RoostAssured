@@ -1,6 +1,6 @@
 class Api::JobsController < ApplicationController
   before_action :require_sitter
-  before_action :set_job, only: [:update_status, :update_notes, :update_eta]
+  before_action :set_job, only: [ :update_status, :update_notes, :update_eta ]
 
   def index
     jobs = @sitter.bids.where(status: "accepted").order(created_at: :desc)

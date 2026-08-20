@@ -17,13 +17,13 @@ class Api::StripeAccountsController < ApplicationController
     )
     render json: { url: url }
   rescue ::Stripe::StripeError => e
-    render json: { errors: [e.message] }, status: :unprocessable_entity
+    render json: { errors: [ e.message ] }, status: :unprocessable_entity
   end
 
   private
 
   def set_sitter
     @sitter = current_user.sitter
-    render json: { errors: ["You must be an approved sitter"] }, status: :forbidden unless @sitter
+    render json: { errors: [ "You must be an approved sitter" ] }, status: :forbidden unless @sitter
   end
 end

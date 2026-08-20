@@ -1,5 +1,5 @@
 class SitterApplication < ApplicationRecord
-  TRAVEL_RADII = [5, 10, 15, 20, 25, 50].freeze
+  TRAVEL_RADII = [ 5, 10, 15, 20, 25, 50 ].freeze
   STATUSES = %w[pending approved rejected].freeze
   AVAILABILITY_DAYS = %w[Monday Tuesday Wednesday Thursday Friday Saturday Sunday].freeze
   AVAILABILITY_TIMES = %w[Morning Evening].freeze

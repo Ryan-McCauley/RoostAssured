@@ -7,6 +7,6 @@ class Api::StripePaymentMethodsController < ApplicationController
     StripePayments::CustomerService.new.attach_payment_method!(current_user, params.require(:payment_method_id))
     render json: { has_payment_method: current_user.has_payment_method? }
   rescue ::Stripe::StripeError => e
-    render json: { errors: [e.message] }, status: :unprocessable_entity
+    render json: { errors: [ e.message ] }, status: :unprocessable_entity
   end
 end

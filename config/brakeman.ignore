@@ -1,0 +1,13 @@
+{
+  "ignored_warnings": [
+    {
+      "fingerprint": "5b73525dfc7343a3e5f41c7420742c1abc14942e2a37157332a175587184603d",
+      "check_name": "PermitAttributes",
+      "message": "Potentially dangerous key allowed for mass assignment",
+      "file": "app/controllers/api/waitlist_signups_controller.rb",
+      "line": 27,
+      "note": "False positive. Brakeman flags :role on the name alone, matching its heuristic for an authorization role. WaitlistSignup#role carries no authorization meaning -- it is a self-declared signup preference ('owner', 'sitter', 'both') used only to segment the waitlist and to pick which copy the welcome email shows. It grants nothing. It is also constrained by `validates :role, inclusion: { in: ROLES }` in app/models/waitlist_signup.rb, so an attacker cannot write an arbitrary value. Authorization in this app is session-based (app/controllers/concerns/authentication.rb) or HTTP Basic for admin (app/controllers/api/admin_controller.rb), and neither consults this column."
+    }
+  ],
+  "brakeman_version": "8.0.6"
+}
