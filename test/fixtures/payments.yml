@@ -1,0 +1,8 @@
+succeeded_job:
+  bid: accepted_job
+  stripe_payment_intent_id: pi_test_123
+  idempotency_key: idem_test_123
+  status: succeeded
+  amount: 50.00
+  application_fee_amount: 5.00
+  accepted_dates: ["2026-08-01"]

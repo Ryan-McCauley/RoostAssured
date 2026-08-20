@@ -1,34 +1,45 @@
-<p>Hi there,</p>
+<% content_for :title, "You're an early bird on the Roost Assured waitlist" %>
 
-<p>
-  You're on the Roost Assured waitlist. We're rolling out area by area,
-  and we'll email you the moment we're live near you.
+<h1 style="margin: 0 0 16px; font-size: 20px; font-weight: 700; color: #1c1917; text-align: center;">You're an early bird 🐣</h1>
+
+<p style="margin: 0 0 8px; text-align: center;">Hi there,</p>
+
+<p style="margin: 0 0 8px; text-align: center;">
+  Thanks for signing up early. We're launching area by area, and being on this list means you'll be the first to know the moment we're live near <%= @waitlist_signup.city.present? ? @waitlist_signup.city : "you" %>.
 </p>
 
-<% if @waitlist_signup.looking_for_sitter? && @available_sitters.any? %>
-  <p>
-    Good news — <strong><%= pluralize(@available_sitters.count, "sitter") %></strong>
-    <% if @waitlist_signup.sitting_start_date.present? %>
-      already available near <%= @waitlist_signup.city %>, <%= @waitlist_signup.state %> for your dates.
-    <% else %>
-      already active near <%= @waitlist_signup.city %>, <%= @waitlist_signup.state %>.
-    <% end %>
-    We'll follow up separately to help make the connection.
-  </p>
+<% if @waitlist_signup.looking_for_sitter? %>
+  <table role="presentation" align="center" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0; background-color: #f6f2e6; border-radius: 10px;">
+    <tr>
+      <td style="padding: 16px 18px; font-size: 14.5px; color: #241c15; text-align: left;">
+        🐔 We'll email you the moment we're active near <strong><%= @waitlist_signup.city %>, <%= @waitlist_signup.state %></strong>, with vetted, background-checked sitters ready to meet your flock.
+      </td>
+    </tr>
+  </table>
 <% end %>
 
-<p>
-  Want to move up the list and help us launch sooner? Share your personal
-  link with any neighbor who keeps chickens or would enjoy sitting for them:
+<p style="margin: 24px 0 4px; font-weight: 700; text-align: center; color: #1c1917;">
+  Want to hatch this sooner?
 </p>
 
-<p><%= link_to @referral_url, @referral_url %></p>
+<p style="margin: 0 0 4px; text-align: center;">
+  Every neighbor you refer moves your area up the list. Share your personal link with anyone who keeps chickens or would enjoy sitting for them:
+</p>
+
+<%= render "application_mailer/button", url: @referral_url, text: "Share your link" %>
+
+<table role="presentation" align="center" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 4px; background-color: #f5f5f4; border-radius: 8px;">
+  <tr>
+    <td style="padding: 10px 14px; font-size: 13px; color: #57534e; word-break: break-all; text-align: left;">
+      <%= @referral_url %>
+    </td>
+  </tr>
+</table>
 
 <% if @waitlist_signup.referrals_count.positive? %>
-  <p>
-    <strong><%= pluralize(@waitlist_signup.referrals_count, "neighbor") %></strong>
-    has already joined thanks to you. Thank you!
+  <p style="margin: 20px 0 0; font-size: 14px; text-align: center;">
+    🎉 <strong><%= pluralize(@waitlist_signup.referrals_count, "neighbor") %></strong> already joined thanks to you — you're helping us get to your coop faster.
   </p>
 <% end %>
 
-<p>— The Roost Assured team</p>
+<p style="margin: 24px 0 0; color: #78716c; text-align: center;">— The Roost Assured team</p>

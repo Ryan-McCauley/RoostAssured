@@ -1,6 +1,17 @@
-<p>
-  You can reset your password on
-  <%= link_to "this password reset page", edit_password_url(@user.password_reset_token) %>.
+<% content_for :title, "Reset your password" %>
 
-  This link will expire in <%= distance_of_time_in_words(0, @user.password_reset_token_expires_in) %>.
+<h1 style="margin: 0 0 16px; font-size: 20px; font-weight: 700; color: #1c1917; text-align: center;">Reset your password</h1>
+
+<p style="margin: 0 0 8px; text-align: center;">
+  We got a request to reset the password on your Roost Assured account. Click below to choose a new one.
+</p>
+
+<%= render "application_mailer/button", url: "#{root_url.chomp('/')}/passwords/#{@user.password_reset_token}/edit", text: "Reset password" %>
+
+<p style="margin: 0 0 4px; font-size: 13.5px; color: #78716c; text-align: center;">
+  This link expires in <%= distance_of_time_in_words(0, @user.password_reset_token_expires_in) %>.
+</p>
+
+<p style="margin: 20px 0 0; font-size: 13.5px; color: #78716c; text-align: center;">
+  If you didn't request this, you can safely ignore this email — your password won't change.
 </p>

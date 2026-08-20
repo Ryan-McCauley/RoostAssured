@@ -52,8 +52,19 @@ class Bid < ApplicationRecord
       accepted_dates: accepted_dates, declined_dates: declined_dates, requested_dates: owner.sitting_dates,
       status: status, on_the_way_at: on_the_way_at, estimated_arrival_at: estimated_arrival_at, job_status: job_status, stale: stale,
       job_tasks: job_tasks.map(&:as_json_public), sitter_notes: sitter_notes,
-      rating: rating, review: review, created_at: created_at, updated_at: updated_at
+      rating: rating, review: review, created_at: created_at, updated_at: updated_at,
+      owner_contact: owner_contact
     }
+  end
+
+  # The owner's phone and street address, released to the sitter only once the owner has accepted
+  # the bid — the sitter needs them to actually show up, but no earlier. Every consumer of
+  # as_json_public is either the bid's own sitter, its owner, or an admin.
+  def owner_contact
+    return nil unless accepted?
+
+    { name: owner.name, phone_number: owner.phone_number, address: owner.address,
+      city: owner.city, state: owner.state, zip_code: owner.zip_code }
   end
 
   # Admin-facing view of a job — a superset of the public fields plus both parties' identities,
@@ -70,7 +81,7 @@ class Bid < ApplicationRecord
   def as_owner_json
     as_json_public.merge(
       sitter: {
-        id: sitter.id, name: sitter.name, city: sitter.city, state: sitter.state,
+        id: sitter.id, user_id: sitter.user_id, name: sitter.name, city: sitter.city, state: sitter.state,
         bio: sitter.bio, years_experience: sitter.years_experience,
         travel_radius_miles: sitter.travel_radius_miles, own_flock: sitter.own_flock,
         average_rating: sitter.average_rating, ratings_count: sitter.ratings_count,

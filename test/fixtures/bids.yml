@@ -1,0 +1,6 @@
+accepted_job:
+  sitter: sam
+  owner: owner_amy
+  status: accepted
+  job_status: in_progress
+  amount: 50.00

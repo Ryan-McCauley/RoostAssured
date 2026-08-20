@@ -1,13 +1,16 @@
 import React from "react"
 import { Routes, Route } from "react-router-dom"
 import { AuthProvider } from "./context/AuthContext"
+import { ThemeProvider } from "./context/ThemeContext"
 import Layout from "./components/Layout"
+import RequireAuth from "./components/RequireAuth"
 import Home from "./pages/Home"
 import Login from "./pages/Login"
 import Signup from "./pages/Signup"
 import PasswordResetRequest from "./pages/PasswordResetRequest"
 import PasswordResetEdit from "./pages/PasswordResetEdit"
 import SitterShow from "./pages/SitterShow"
+import BecomeSitter from "./pages/BecomeSitter"
 import Account from "./pages/Account"
 import JobRequests from "./pages/JobRequests"
 import AdminLayout from "./pages/admin/AdminLayout"
@@ -20,35 +23,48 @@ import AdminSitterApplications from "./pages/admin/SitterApplications"
 import AdminSitters from "./pages/admin/Sitters"
 import AdminJobs from "./pages/admin/Jobs"
 import AdminPayments from "./pages/admin/Payments"
+import AdminReports from "./pages/admin/Reports"
+import TermsOfService from "./pages/legal/TermsOfService"
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy"
+import IndependentContractorDisclosure from "./pages/legal/IndependentContractorDisclosure"
+import BackgroundCheckDisclosure from "./pages/legal/BackgroundCheckDisclosure"
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/passwords/new" element={<PasswordResetRequest />} />
-          <Route path="/passwords/:token/edit" element={<PasswordResetEdit />} />
-          <Route path="/sitters/:id" element={<SitterShow />} />
-          <Route path="/account" element={<Account />} />
-          <Route path="/job_requests" element={<JobRequests />} />
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminWaitlistSignups />} />
-            <Route path="waitlist_signups" element={<AdminWaitlistSignups />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="sitter_applications" element={<AdminSitterApplications />} />
-            <Route path="sitters" element={<AdminSitters />} />
-            <Route path="service_areas" element={<AdminServiceAreas />} />
-            <Route path="zip_searches" element={<AdminZipSearches />} />
-            <Route path="heatmap" element={<AdminHeatmap />} />
-            <Route path="jobs" element={<AdminJobs />} />
-            <Route path="payments" element={<AdminPayments />} />
-          </Route>
-          <Route path="*" element={<Home />} />
-        </Routes>
-      </Layout>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/passwords/new" element={<PasswordResetRequest />} />
+            <Route path="/passwords/:token/edit" element={<PasswordResetEdit />} />
+            <Route path="/sitters/:id" element={<SitterShow />} />
+            <Route path="/become-a-sitter" element={<BecomeSitter />} />
+            <Route path="/account" element={<RequireAuth><Account /></RequireAuth>} />
+            <Route path="/job_requests" element={<RequireAuth><JobRequests /></RequireAuth>} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/independent-contractor-disclosure" element={<IndependentContractorDisclosure />} />
+            <Route path="/background-check-disclosure" element={<BackgroundCheckDisclosure />} />
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminWaitlistSignups />} />
+              <Route path="waitlist_signups" element={<AdminWaitlistSignups />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="sitter_applications" element={<AdminSitterApplications />} />
+              <Route path="sitters" element={<AdminSitters />} />
+              <Route path="service_areas" element={<AdminServiceAreas />} />
+              <Route path="zip_searches" element={<AdminZipSearches />} />
+              <Route path="heatmap" element={<AdminHeatmap />} />
+              <Route path="jobs" element={<AdminJobs />} />
+              <Route path="payments" element={<AdminPayments />} />
+              <Route path="reports" element={<AdminReports />} />
+            </Route>
+            <Route path="*" element={<Home />} />
+          </Routes>
+        </Layout>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }

@@ -5,7 +5,6 @@ import Checklist from "./Checklist"
 import CalendarPicker from "./CalendarPicker"
 
 export default function CareRequestModal({ user, onClose, onSuccess }) {
-  const isEditing = user.sitting_dates?.length > 0
   const needsContactInfo = !user.phone_number || !user.address || !user.city || !user.state || !user.zip_code
   const STEPS = needsContactInfo
     ? ["Contact & address", "Care tasks", "Special requests", "Sitting dates"]

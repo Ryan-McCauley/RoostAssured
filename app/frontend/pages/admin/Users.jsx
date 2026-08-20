@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react"
-import { api } from "../../lib/api"
+import React from "react"
+import Pagination from "../../components/Pagination"
+import { usePaginated } from "../../hooks/usePaginated"
 
 export default function Users() {
-  const [users, setUsers] = useState(null)
-
-  useEffect(() => { api.get("/admin/users").then((r) => setUsers(r.users)) }, [])
+  const { data, meta, setPage } = usePaginated("/admin/users")
+  const users = data?.users
 
   if (!users) return <p>Loading…</p>
 
@@ -25,6 +25,7 @@ export default function Users() {
           ))}
         </tbody>
       </table>
+      <Pagination meta={meta} onChange={setPage} />
     </div>
   )
 }

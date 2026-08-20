@@ -1,6 +1,7 @@
 class Api::Admin::SittersController < Api::AdminController
   def index
-    render json: { sitters: Sitter.includes(:user).order(created_at: :desc).map(&:as_admin_json) }
+    sitters = Sitter.includes(:user, :bids, profile_photo_attachment: :blob).order(created_at: :desc)
+    render json: { sitters: paginate(sitters).map(&:as_admin_json), meta: pagination_meta(sitters) }
   end
 
   def deactivate

@@ -6,6 +6,8 @@ class Api::AdminController < ApplicationController
     raise "Set ADMIN_USERNAME and ADMIN_PASSWORD to enable the admin dashboard"
   end
 
+  include Paginated
+
   allow_unauthenticated_access
   http_basic_authenticate_with name: ADMIN_USERNAME, password: ADMIN_PASSWORD
   skip_after_action :track_page_view, raise: false

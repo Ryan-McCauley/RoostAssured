@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"
-import { Link, useSearchParams } from "react-router-dom"
+import { Link, useLocation, useSearchParams } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import { api } from "../lib/api"
 import ZipSearchForm from "../components/ZipSearchForm"
@@ -7,18 +7,9 @@ import SittingWindowForm from "../components/SittingWindowForm"
 import WaitlistForm from "../components/WaitlistForm"
 import CareRequestModal from "../components/CareRequestModal"
 import MessageThread from "../components/MessageThread"
+import BlockReportMenu from "../components/BlockReportMenu"
 import useJobChannel from "../hooks/useJobChannel"
-
-const iconProps = {
-  width: 22,
-  height: 22,
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 1.75,
-  strokeLinecap: "round",
-  strokeLinejoin: "round",
-}
+import useSeo from "../hooks/useSeo"
 
 const JOB_STATUS_LABELS = { not_started: "Not started", on_the_way: "On the way", in_progress: "In progress", completed: "Completed" }
 
@@ -75,7 +66,7 @@ function RateSitterForm({ onSubmit }) {
   )
 }
 
-function BidCard({ bid, user, bidActionId, onDecide, onRate, onJobUpdate, onEditRequest }) {
+function BidCard({ bid, user, bidActionId, onDecide, onRate, onJobUpdate, onEditRequest, onBlocked }) {
   return (
     <div style={{ border: "1px solid var(--border)", borderRadius: "0.75rem", padding: "1rem 1.1rem", textAlign: "left" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem", marginBottom: "0.5rem" }}>
@@ -108,7 +99,10 @@ function BidCard({ bid, user, bidActionId, onDecide, onRate, onJobUpdate, onEdit
             )}
           </div>
         </div>
-        <span style={{ fontWeight: 700, color: "var(--amber-700)" }}>${Math.round(bid.amount)}/visit</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <span style={{ fontWeight: 700, color: "var(--amber-700)" }}>${Math.round(bid.amount)}/visit</span>
+          <BlockReportMenu targetUserId={bid.sitter.user_id} targetName={bid.sitter.name} bidId={bid.id} onBlocked={onBlocked} />
+        </div>
       </div>
       {bid.sitter.bio && <p style={{ fontSize: "0.85rem", color: "var(--text)", marginBottom: "0.5rem" }}>{bid.sitter.bio}</p>}
       {bid.message && <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontStyle: "italic", marginBottom: "0.5rem" }}>"{bid.message}"</p>}
@@ -221,52 +215,168 @@ function BidCard({ bid, user, bidActionId, onDecide, onRate, onJobUpdate, onEdit
   )
 }
 
-const FEATURES = [
+const HOW_IT_WORKS = [
   {
-    title: "Real local sitters",
-    description: "Find someone nearby who already knows their way around a coop.",
-    icon: (
-      <svg {...iconProps}>
-        <circle cx="12" cy="8" r="3.5" />
-        <path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6" />
-      </svg>
-    ),
+    step: "1",
+    title: "Search your ZIP code",
+    description: "Tell us where your coop is and we'll show you the chicken sitters already serving your area.",
   },
   {
-    title: "Photo check-ins",
-    description: "Every visit comes with a photo update, so you always know your flock is fine.",
-    icon: (
-      <svg {...iconProps}>
-        <path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" />
-        <circle cx="12" cy="13" r="3.25" />
-      </svg>
-    ),
+    step: "2",
+    title: "Compare sitters & bids",
+    description: "Review local sitters' experience and ratings, then pick the bid that fits your flock and budget.",
   },
   {
-    title: "Two-way trust",
-    description: "Owners and sitters both review each other — no one-sided guessing.",
-    icon: (
-      <svg {...iconProps}>
-        <path d="M12 3.5 5 6v6c0 4.2 3 7.3 7 8.5 4-1.2 7-4.3 7-8.5V6l-7-2.5Z" />
-        <path d="m9 12 2 2 4-4" />
-      </svg>
-    ),
-  },
-  {
-    title: "Scheduled coop maintenance",
-    description: "Book recurring coop cleanings and upkeep, not just one-off visits.",
-    icon: (
-      <svg {...iconProps}>
-        <path d="M4 21v-6a8 8 0 0 1 16 0v6" />
-        <path d="M4 21h16" />
-        <path d="M9 21v-4a3 3 0 0 1 6 0v4" />
-      </svg>
-    ),
+    step: "3",
+    title: "Relax with photo updates",
+    description: "Your sitter feeds, waters, and collects eggs on schedule — with a photo after every visit.",
   },
 ]
 
+const FAQS = [
+  {
+    q: "What does a chicken sitter do?",
+    a: "A Roost Assured chicken sitter visits your coop while you're away to feed and water your flock, collect eggs, check for predator damage, and clean up as needed. Every visit ends with a photo update so you can see your flock is safe.",
+  },
+  {
+    q: "How much does chicken sitting cost?",
+    a: "Sitters on Roost Assured set their own per-visit rate and bid on your specific request, so pricing varies by area and how much care your flock needs. You'll see exact bid amounts before you accept anyone.",
+  },
+  {
+    q: "Are Roost Assured sitters background-checked?",
+    a: "Yes. Every sitter application goes through a background check before they're approved to bid on care requests.",
+  },
+  {
+    q: "What areas does Roost Assured serve?",
+    a: "We're expanding one ZIP code at a time. Search your ZIP above to see if we're active near you — if not, join the waitlist and we'll email you the moment we launch in your area.",
+  },
+  {
+    q: "How do I become a chicken sitter?",
+    a: "Create a free account, submit a sitter application, and pass a background check. Once approved, you can browse open care requests from chicken owners near you and submit bids.",
+  },
+]
+
+function FaqItem({ faq, open, onToggle }) {
+  return (
+    <div style={{ borderBottom: "1px solid var(--border)" }}>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        style={{
+          width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem",
+          background: "transparent", border: 0, padding: "1.1rem 0", cursor: "pointer", textAlign: "left",
+          color: "var(--text)", fontWeight: 700, fontSize: "1rem",
+        }}
+      >
+        {faq.q}
+        <span style={{ flexShrink: 0, color: "var(--amber-500)", fontSize: "1.2rem", lineHeight: 1 }}>{open ? "−" : "+"}</span>
+      </button>
+      {open && <p style={{ color: "var(--text-muted)", fontSize: "0.92rem", lineHeight: 1.6, paddingBottom: "1.1rem", margin: 0 }}>{faq.a}</p>}
+    </div>
+  )
+}
+
+function MarketingSections() {
+  const [openFaq, setOpenFaq] = useState(0)
+
+  return (
+    <>
+      <section style={{ background: "var(--card-bg)", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>
+        <div id="how-it-works" className="container" style={{ padding: "3.5rem 1.25rem", scrollMarginTop: "5rem" }}>
+          <p style={{ textAlign: "center", color: "var(--amber-600)", fontWeight: 700, textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.04em", marginBottom: "0.5rem" }}>
+            How it works
+          </p>
+          <h2 style={{ textAlign: "center", fontSize: "clamp(1.45rem, 5vw, 1.9rem)", fontWeight: 700, marginBottom: "2.5rem" }}>
+            Booking a trusted chicken sitter takes minutes.
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(15rem, 1fr))", gap: "2rem" }}>
+            {HOW_IT_WORKS.map((item) => (
+              <div key={item.step} style={{ textAlign: "center" }}>
+                <div
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center", width: "2.75rem", height: "2.75rem",
+                    margin: "0 auto 1rem", borderRadius: "999px", background: "var(--brand-dark)", color: "var(--brand-amber)",
+                    fontWeight: 700, fontSize: "1.1rem", border: "1px solid var(--border)",
+                  }}
+                >
+                  {item.step}
+                </div>
+                <h3 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>{item.title}</h3>
+                <p style={{ color: "var(--stone-600)", fontSize: "0.9rem", lineHeight: 1.6 }}>{item.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="become-a-sitter" style={{ background: "var(--brand-dark)", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", scrollMarginTop: "5rem" }}>
+        <div className="container mkt-cta">
+          <div className="mkt-cta-copy" style={{ maxWidth: "32rem" }}>
+            <p style={{ color: "var(--brand-amber)", fontWeight: 700, textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.04em", marginBottom: "0.5rem" }}>
+              Keep chickens yourself?
+            </p>
+            <h2 style={{ fontSize: "clamp(1.4rem, 4.5vw, 1.75rem)", fontWeight: 700, marginBottom: "0.75rem", color: "var(--brand-cream)" }}>
+              Become a background-checked chicken sitter and earn on your own schedule.
+            </h2>
+            <p style={{ color: "#b7ab98", fontSize: "0.95rem", lineHeight: 1.6 }}>
+              Set your own rates, bid on care requests near you, and get paid for feeding, egg collection,
+              and coop care — no long-term commitment required.
+            </p>
+          </div>
+          <Link to="/become-a-sitter" className="btn btn-primary" style={{ flexShrink: 0 }}>Learn more</Link>
+        </div>
+      </section>
+
+      <section id="faq" className="container" style={{ padding: "4.5rem 1.25rem", maxWidth: "42rem", scrollMarginTop: "5rem" }}>
+        <p style={{ textAlign: "center", color: "var(--amber-600)", fontWeight: 700, textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.04em", marginBottom: "0.5rem" }}>
+          FAQ
+        </p>
+        <h2 style={{ textAlign: "center", fontSize: "clamp(1.45rem, 5vw, 1.9rem)", fontWeight: 700, marginBottom: "2rem" }}>
+          Chicken sitting, answered.
+        </h2>
+        <div style={{ borderTop: "1px solid var(--border)" }}>
+          {FAQS.map((faq, i) => (
+            <FaqItem key={faq.q} faq={faq} open={openFaq === i} onToggle={() => setOpenFaq(openFaq === i ? -1 : i)} />
+          ))}
+        </div>
+      </section>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: FAQS.map((faq) => ({
+              "@type": "Question",
+              name: faq.q,
+              acceptedAnswer: { "@type": "Answer", text: faq.a },
+            })),
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Service",
+            serviceType: "Chicken sitting",
+            name: "Roost Assured",
+            description: "Backyard chicken sitting: feeding, egg collection, and coop care from background-checked local sitters.",
+            areaServed: "United States",
+            provider: { "@type": "Organization", name: "Roost Assured", url: "https://roostassured.com" },
+          }),
+        }}
+      />
+    </>
+  )
+}
+
 export default function Home() {
   const { user, setUser } = useAuth()
+  const location = useLocation()
   const [searchParams] = useSearchParams()
   const referredByCode = searchParams.get("ref")
   const [data, setData] = useState(null)
@@ -351,6 +461,21 @@ export default function Home() {
     setBids((prev) => prev.map((b) => (b.id === bidId ? { ...b, ...jobData } : b)))
   }
 
+  const handleBlockedSitter = (sitterUserId) => {
+    setBids((prev) => prev.filter((b) => b.sitter.user_id !== sitterUserId))
+  }
+
+  useSeo({
+    title: "Roost Assured – Trusted Chicken Sitters Near You",
+    description: "Find a background-checked chicken sitter near you for feeding, egg collection, and coop care while you travel. Search your ZIP code to see who's available.",
+  })
+
+  useEffect(() => {
+    if (loading || !location.hash) return
+    const el = document.getElementById(location.hash.slice(1))
+    if (el) el.scrollIntoView({ behavior: "smooth" })
+  }, [loading, location.hash])
+
   if (loading || !data) {
     return <section className="container" style={{ paddingTop: "6rem", textAlign: "center" }}>Loading…</section>
   }
@@ -368,7 +493,7 @@ export default function Home() {
       {user ? (
         <>
           <p style={{ color: "var(--amber-600)", fontWeight: 600, textTransform: "uppercase", fontSize: "0.875rem" }}>Welcome back</p>
-          <h1 style={{ fontSize: "2.25rem", fontWeight: 700 }}>Good to see you, {user.name}.</h1>
+          <h1 style={{ fontSize: "clamp(1.6rem, 6vw, 2.25rem)", fontWeight: 700 }}>Good to see you, {user.name}.</h1>
           <p style={{ fontSize: "1.125rem", color: "var(--text-muted)", maxWidth: "36rem", margin: "1.5rem auto" }}>
             {user.sitting_dates?.length > 0
               ? `Your request is in — ${user.sitting_dates.length} day${user.sitting_dates.length === 1 ? "" : "s"} of care requested. We'll email you as soon as a sitter nearby is ready to connect.`
@@ -382,7 +507,7 @@ export default function Home() {
       ) : confirmed_signup ? (
         <>
           <p style={{ color: "var(--amber-600)", fontWeight: 600, textTransform: "uppercase", fontSize: "0.875rem" }}>You're on the list</p>
-          <h1 style={{ fontSize: "2.75rem", fontWeight: 700 }}>Going out of town?<br />Your flock still needs a keeper.</h1>
+          <h1 style={{ fontSize: "clamp(1.85rem, 7vw, 2.75rem)", fontWeight: 700 }}>Going out of town?<br />Your flock still needs a keeper.</h1>
           <p style={{ fontSize: "1.125rem", color: "var(--stone-600)", maxWidth: "36rem", margin: "1.5rem auto" }}>
             Roost Assured connects backyard chicken owners with trusted local sitters — feeding, egg
             collection, and coop care while you're away.
@@ -431,7 +556,7 @@ export default function Home() {
             </svg>
           </div>
           <p style={{ color: "var(--amber-600)", fontWeight: 600, textTransform: "uppercase", fontSize: "0.875rem" }}>Good news</p>
-          <h1 style={{ fontSize: "2.75rem", fontWeight: 700 }}>
+          <h1 style={{ fontSize: "clamp(1.85rem, 7vw, 2.75rem)", fontWeight: 700 }}>
             {nearby_sitters.length > 0
               ? <>There are flock keepers available near {searched_city}, {searched_state}.</>
               : <>Roost Assured is live in {searched_city}, {searched_state}.</>}
@@ -458,7 +583,7 @@ export default function Home() {
       ) : searched_zip && !sitting_window_asked ? (
         <>
           <p style={{ color: "var(--amber-600)", fontWeight: 600, textTransform: "uppercase", fontSize: "0.875rem" }}>Almost there</p>
-          <h1 style={{ fontSize: "2.75rem", fontWeight: 700 }}>Let's find sitters near {searched_city}, {searched_state}.</h1>
+          <h1 style={{ fontSize: "clamp(1.85rem, 7vw, 2.75rem)", fontWeight: 700 }}>Let's find sitters near {searched_city}, {searched_state}.</h1>
           <p style={{ fontSize: "1.125rem", color: "var(--stone-600)", maxWidth: "36rem", margin: "1.5rem auto" }}>
             First, let us know when you're looking for coverage.
           </p>
@@ -467,7 +592,7 @@ export default function Home() {
       ) : searched_zip ? (
         <>
           <p style={{ color: "var(--amber-600)", fontWeight: 600, textTransform: "uppercase", fontSize: "0.875rem" }}>Almost there</p>
-          <h1 style={{ fontSize: "2.75rem", fontWeight: 700 }}>No sitters near {searched_city}, {searched_state} yet.</h1>
+          <h1 style={{ fontSize: "clamp(1.85rem, 7vw, 2.75rem)", fontWeight: 700 }}>No sitters near {searched_city}, {searched_state} yet.</h1>
           <p style={{ fontSize: "1.125rem", color: "var(--stone-600)", maxWidth: "36rem", margin: "1.5rem auto" }}>
             Enter your email and we'll let you know the moment Roost Assured has sitters (or owners) near you.
           </p>
@@ -479,7 +604,7 @@ export default function Home() {
       ) : referralFormShown ? (
         <>
           <p style={{ color: "var(--amber-600)", fontWeight: 600, textTransform: "uppercase", fontSize: "0.875rem" }}>Almost there</p>
-          <h1 style={{ fontSize: "2.75rem", fontWeight: 700 }}>Going out of town?<br />Your flock still needs a keeper.</h1>
+          <h1 style={{ fontSize: "clamp(1.85rem, 7vw, 2.75rem)", fontWeight: 700 }}>Going out of town?<br />Your flock still needs a keeper.</h1>
           <p style={{ fontSize: "1.125rem", color: "var(--stone-600)", maxWidth: "36rem", margin: "1.5rem auto" }}>
             Enter your email and we'll let you know the moment Roost Assured has sitters (or owners) near you.
           </p>
@@ -487,15 +612,32 @@ export default function Home() {
         </>
       ) : (
         <>
-          <h1 style={{ fontSize: "2.75rem", fontWeight: 700 }}>Find a flock sitter near you.</h1>
+          <p style={{ color: "var(--amber-600)", fontWeight: 600, textTransform: "uppercase", fontSize: "0.875rem" }}>Backyard chicken sitting, made simple</p>
+          <h1 style={{ fontSize: "clamp(1.85rem, 7vw, 2.75rem)", fontWeight: 700, lineHeight: 1.15 }}>Find a trusted chicken sitter near you.</h1>
           <p style={{ fontSize: "1.125rem", color: "var(--stone-600)", maxWidth: "36rem", margin: "1.5rem auto" }}>
-            Roost Assured connects backyard chicken owners with trusted local sitters. Enter your ZIP code
-            to see what's happening in your area.
+            Roost Assured connects backyard chicken owners with background-checked local sitters for
+            feeding, egg collection, and coop care. Enter your ZIP code to see what's happening in your area.
           </p>
           <ZipSearchForm onSuccess={load} />
+          <div style={{ display: "flex", gap: "1.5rem", justifyContent: "center", flexWrap: "wrap", marginTop: "2rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--brand-amber)" }}><path d="M20 6 9 17l-5-5" /></svg>
+              Background-checked sitters
+            </span>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--brand-amber)" }}><path d="M20 6 9 17l-5-5" /></svg>
+              Photo updates every visit
+            </span>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--brand-amber)" }}><path d="M20 6 9 17l-5-5" /></svg>
+              No subscriptions, pay per visit
+            </span>
+          </div>
         </>
       )}
     </section>
+
+    {!user && <MarketingSections />}
 
     {user && user.sitting_dates?.length > 0 && (
       <section className="container" style={{ paddingBottom: "3.5rem" }}>
@@ -528,7 +670,7 @@ export default function Home() {
                 <BidCard
                   key={bid.id} bid={bid} user={user} bidActionId={bidActionId}
                   onDecide={handleBidDecision} onRate={handleRateBid} onJobUpdate={handleJobUpdate}
-                  onEditRequest={() => setCareRequestOpen(true)}
+                  onEditRequest={() => setCareRequestOpen(true)} onBlocked={handleBlockedSitter}
                 />
               ))}
             </div>
@@ -549,6 +691,7 @@ export default function Home() {
                     <BidCard
                       key={bid.id} bid={bid} user={user} bidActionId={bidActionId}
                       onDecide={handleBidDecision} onRate={handleRateBid} onJobUpdate={handleJobUpdate}
+                      onBlocked={handleBlockedSitter}
                     />
                   ))}
                 </div>
@@ -575,41 +718,6 @@ export default function Home() {
         </div>
       </section>
     )}
-
-    <section style={{ background: "var(--card-bg)", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>
-      <div
-        className="container"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(11rem, 1fr))",
-          gap: "2.5rem",
-          padding: "4rem 1.25rem",
-          textAlign: "center",
-        }}
-      >
-        {FEATURES.map((feature) => (
-          <div key={feature.title}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                width: "3.25rem",
-                height: "3.25rem",
-                margin: "0 auto 0.75rem",
-                borderRadius: "0.65rem",
-                background: "var(--brand-dark)",
-                color: "var(--brand-amber)",
-              }}
-            >
-              {feature.icon}
-            </div>
-            <h3 style={{ fontWeight: 600, marginBottom: "0.5rem" }}>{feature.title}</h3>
-            <p style={{ color: "var(--stone-600)", fontSize: "0.875rem" }}>{feature.description}</p>
-          </div>
-        ))}
-      </div>
-    </section>
 
     {careRequestOpen && (
       <CareRequestModal

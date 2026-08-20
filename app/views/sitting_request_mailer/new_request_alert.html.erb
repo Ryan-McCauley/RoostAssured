@@ -1,0 +1,26 @@
+<% content_for :title, "New chicken sitting request near you" %>
+
+<h1 style="margin: 0 0 16px; font-size: 20px; font-weight: 700; color: #1c1917; text-align: center;">A new request near you 🐣</h1>
+
+<p style="margin: 0 0 8px; text-align: center;">Hi <%= @sitter.name %>,</p>
+
+<p style="margin: 0 0 8px; text-align: center;">
+  <strong><%= @user.name %></strong> in <%= @user.city %>, <%= @user.state %> just posted a chicken sitting
+  request within your travel radius. Bids are first-come, first-served, so take a look while it's fresh.
+</p>
+
+<table role="presentation" align="center" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0; background-color: #f6f2e6; border-radius: 10px;">
+  <tr>
+    <td style="padding: 16px 18px; font-size: 14.5px; color: #241c15; text-align: left;">
+      <strong>Dates:</strong> <%= @user.upcoming_sitting_dates.map { |d| d.strftime("%b %-d") }.join(", ") %><br>
+      <% if @user.care_tasks.present? %>
+        <strong>Care tasks:</strong> <%= (@user.care_tasks + [ @user.other_care_task ].compact).join(", ") %><br>
+      <% end %>
+      <strong>Location:</strong> <%= @user.city %>, <%= @user.state %>
+    </td>
+  </tr>
+</table>
+
+<%= render "application_mailer/button", url: "#{root_url.chomp('/')}/job_requests", text: "View & bid on this request" %>
+
+<p style="margin: 24px 0 0; color: #78716c; text-align: center;">— The Roost Assured team</p>

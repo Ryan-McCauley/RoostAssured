@@ -5,6 +5,7 @@ import { api } from "../lib/api"
 import RequestedDatesCalendar from "../components/RequestedDatesCalendar"
 import RequestLocationMap from "../components/RequestLocationMap"
 import MessageThread from "../components/MessageThread"
+import BlockReportMenu from "../components/BlockReportMenu"
 
 function formatShortDate(dateStr) {
   const d = new Date(dateStr + "T00:00:00")
@@ -53,6 +54,15 @@ export default function JobRequests() {
       job_requests: [...prev.job_requests.filter((j) => j.id !== updatedJob.id), ...(isPassed ? [] : [updatedJob])],
       passed_requests: [...prev.passed_requests.filter((j) => j.id !== updatedJob.id), ...(isPassed ? [updatedJob] : [])],
     }))
+  }
+
+  const handleBlockedOwner = (ownerUserId) => {
+    setData((prev) => ({
+      ...prev,
+      job_requests: prev.job_requests.filter((j) => j.id !== ownerUserId),
+      passed_requests: prev.passed_requests.filter((j) => j.id !== ownerUserId),
+    }))
+    if (selectedId === ownerUserId) setSelectedId(null)
   }
 
   const passJob = async (job) => {
@@ -108,6 +118,7 @@ export default function JobRequests() {
               onOpen={() => setSelectedId(job.id)}
               onPass={() => passJob(job)}
               passing={passingId === job.id}
+              onBlocked={handleBlockedOwner}
             />
           ))}
         </div>
@@ -144,10 +155,11 @@ export default function JobRequests() {
                   <span>{job.sitting_dates.length} day{job.sitting_dates.length === 1 ? "" : "s"}</span>
                   <span>{job.distance_miles != null ? `${job.distance_miles} mi` : "—"}</span>
                   <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Passed</span>
-                  <span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                     <button type="button" className="btn btn-outline" style={{ padding: "0.3rem 0.7rem", fontSize: "0.78rem" }} onClick={() => setSelectedId(job.id)}>
                       Reconsider
                     </button>
+                    <BlockReportMenu targetUserId={job.id} targetName={job.name} onBlocked={handleBlockedOwner} />
                   </span>
                 </div>
               ))}
@@ -174,13 +186,14 @@ export default function JobRequests() {
           onClose={() => setSelectedId(null)}
           onBidSaved={applyJobUpdate}
           onPass={() => passJob(selectedJob)}
+          onBlocked={handleBlockedOwner}
         />
       )}
     </section>
   )
 }
 
-function JobListRow({ job, onOpen, onPass, passing }) {
+function JobListRow({ job, onOpen, onPass, passing, onBlocked }) {
   return (
     <div className="job-list-row job-list-item" style={{ cursor: "pointer" }} onClick={onOpen}>
       <span>
@@ -214,20 +227,21 @@ function JobListRow({ job, onOpen, onPass, passing }) {
           <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Not bid</span>
         )}
       </span>
-      <span>
+      <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }} onClick={(e) => e.stopPropagation()}>
         <button
           type="button" className="btn btn-outline" disabled={passing}
           style={{ padding: "0.3rem 0.7rem", fontSize: "0.78rem" }}
-          onClick={(e) => { e.stopPropagation(); onPass() }}
+          onClick={() => onPass()}
         >
           {passing ? "…" : "Pass"}
         </button>
+        <BlockReportMenu targetUserId={job.id} targetName={job.name} bidId={job.my_bid?.id} onBlocked={onBlocked} />
       </span>
     </div>
   )
 }
 
-function JobRequestDetailModal({ job, onClose, onBidSaved, onPass }) {
+function JobRequestDetailModal({ job, onClose, onBidSaved, onPass, onBlocked }) {
   // A stale bid was written against the request's old sitting_dates — any accepted/declined
   // picks that no longer appear in the current dates would fail validation on resubmit, so drop them.
   const validDates = new Set(job.sitting_dates)
@@ -322,6 +336,7 @@ function JobRequestDetailModal({ job, onClose, onBidSaved, onPass }) {
                   {job.distance_miles} mi away
                 </span>
               )}
+              <BlockReportMenu targetUserId={job.id} targetName={job.name} bidId={job.my_bid?.id} onBlocked={onBlocked} />
               <button
                 onClick={onClose}
                 aria-label="Close"
@@ -347,8 +362,9 @@ function JobRequestDetailModal({ job, onClose, onBidSaved, onPass }) {
           )}
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(11rem, 1fr))", gap: "0.9rem", marginBottom: "1rem" }}>
-            <Field label="Contact">
-              {job.phone_number || "—"}<br />{job.address || "—"}
+            <Field label="Location">
+              {job.city}, {job.state} {job.zip_code}<br />
+              <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>Exact address shared once your bid is accepted</span>
             </Field>
             <Field label="Flock size">{job.flock_size_tier || "—"}</Field>
             <Field label="Sitting type">{job.sitting_type || "—"}</Field>
@@ -386,7 +402,7 @@ function JobRequestDetailModal({ job, onClose, onBidSaved, onPass }) {
                 declinedDates={bidForm.declined_dates}
                 onToggle={cycleDate}
               />
-              <RequestLocationMap latitude={job.latitude} longitude={job.longitude} label={job.address} />
+              <RequestLocationMap latitude={job.latitude} longitude={job.longitude} label={`${job.city}, ${job.state}`} />
             </div>
           </Field>
 
@@ -528,6 +544,20 @@ function MyJobCard({ job, onUpdate, defaultExpanded = true }) {
         <div style={{ padding: "0 1.1rem 1.1rem" }}>
           {error && <p className="flash flash-alert" style={{ textAlign: "left", borderRadius: "0.4rem", fontSize: "0.85rem" }}>{error}</p>}
 
+          {job.owner_contact && (
+            <div style={{ marginBottom: "0.85rem", paddingBottom: "0.85rem", borderBottom: "1px solid var(--border)" }}>
+              <p style={{ fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "0.35rem" }}>
+                Owner contact
+              </p>
+              <p style={{ fontSize: "0.88rem", margin: 0 }}>
+                {job.owner_contact.name}<br />
+                {job.owner_contact.phone_number || "—"}<br />
+                {job.owner_contact.address || "—"}<br />
+                {job.owner_contact.city}, {job.owner_contact.state} {job.owner_contact.zip_code}
+              </p>
+            </div>
+          )}
+
           <div className="field" style={{ marginBottom: "0.85rem" }}>
             <label htmlFor={`job-status-${job.id}`} style={{ fontSize: "0.78rem" }}>Job status</label>
             <select id={`job-status-${job.id}`} value={job.job_status} onChange={changeStatus} disabled={changingStatus}>
@@ -578,6 +608,7 @@ function MyJobCard({ job, onUpdate, defaultExpanded = true }) {
               📝 {job.sitter_notes ? "Edit notes" : "Add notes"}
             </button>
             <MessageThread bidId={job.id} />
+            <BlockReportMenu targetUserId={job.owner_id} targetName={job.owner_contact?.name || "this owner"} bidId={job.id} />
           </div>
         </div>
       )}

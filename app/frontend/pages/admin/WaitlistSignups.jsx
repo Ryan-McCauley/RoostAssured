@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react"
-import { api } from "../../lib/api"
+import React from "react"
+import Pagination from "../../components/Pagination"
+import { usePaginated } from "../../hooks/usePaginated"
 
 export default function WaitlistSignups() {
-  const [data, setData] = useState(null)
-
-  useEffect(() => { api.get("/admin/waitlist_signups").then(setData) }, [])
+  const { data, meta, setPage } = usePaginated("/admin/waitlist_signups")
 
   if (!data) return <p>Loading…</p>
 
@@ -26,6 +25,7 @@ export default function WaitlistSignups() {
           ))}
         </tbody>
       </table>
+      <Pagination meta={meta} onChange={setPage} />
     </div>
   )
 }

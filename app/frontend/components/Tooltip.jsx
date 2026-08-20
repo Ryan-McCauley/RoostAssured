@@ -28,7 +28,7 @@ export default function Tooltip({ text }) {
           role="tooltip"
           style={{
             position: "absolute", bottom: "calc(100% + 0.4rem)", left: "50%", transform: "translateX(-50%)",
-            background: "var(--brand-dark)", color: "var(--text)", border: "1px solid var(--border)",
+            background: "var(--brand-dark)", color: "var(--brand-cream)", border: "1px solid var(--border)",
             borderRadius: "0.5rem", padding: "0.5rem 0.65rem", fontSize: "0.78rem", fontWeight: 400,
             width: "max-content", maxWidth: "16rem", boxShadow: "0 10px 25px rgba(0,0,0,0.35)", zIndex: 20,
             textAlign: "left", lineHeight: 1.4,

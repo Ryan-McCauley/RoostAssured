@@ -79,6 +79,7 @@ export default function AdminLayout() {
         <NavLink to="/admin/heatmap">Heatmap</NavLink>
         <NavLink to="/admin/jobs">Jobs</NavLink>
         <NavLink to="/admin/payments">Payments</NavLink>
+        <NavLink to="/admin/reports">Reports</NavLink>
         <button type="button" onClick={logOut} style={{ marginLeft: "auto", background: "transparent", border: 0, textDecoration: "underline", cursor: "pointer" }}>
           Log out
         </button>

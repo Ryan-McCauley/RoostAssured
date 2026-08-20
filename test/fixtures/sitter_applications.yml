@@ -1,0 +1,11 @@
+pending_jordan:
+  user: applicant_jordan
+  first_name: Jordan
+  last_name: Applicant
+  street_address: 123 Coop Ln
+  city: Austin
+  state: TX
+  zip_code: "78701"
+  price_per_visit: 20.00
+  background_check_consent: true
+  status: pending

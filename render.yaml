@@ -13,6 +13,10 @@ services:
     plan: starter
     region: ohio
     healthCheckPath: /up
+    # A Render disk attaches to exactly one service, so this volume belongs to the web service
+    # alone. That means the web service cannot scale past a single instance, and the worker below
+    # cannot read or write attachments. See "Known limitations" in the README; moving Active
+    # Storage to S3 removes both constraints.
     disk:
       name: roost-assured-storage
       mountPath: /var/data
@@ -48,6 +52,19 @@ services:
         sync: false
       - key: MAILER_FROM
         value: "Roost Assured <hello@roostassured.com>"
+      - key: CHECKR_API_KEY
+        sync: false
+      - key: CHECKR_WEBHOOK_KEY
+        sync: false
+      - key: CHECKR_PACKAGE
+        sync: false
+      # Nominatim's usage policy requires a contact address on every request.
+      - key: GEOCODER_CONTACT_EMAIL
+        sync: false
+      # Optional. Without it, IP geolocation for the admin heatmap is simply off: ip-api's free
+      # tier has no HTTPS endpoint, and visitor IPs are not worth sending in the clear.
+      - key: IP_API_KEY
+        sync: false
 
   - type: worker
     name: roost-assured-worker
@@ -65,6 +82,12 @@ services:
         fromDatabase:
           name: roost-assured-db
           property: connectionString
+      - key: APP_HOST
+        value: roostassured.com
+      # Set so the worker boots with the same Active Storage configuration as the web service.
+      # It cannot reach that disk (see above), so jobs here must not touch attachments.
+      - key: STORAGE_DISK_PATH
+        value: /var/data/storage
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_PUBLISHABLE_KEY
@@ -75,5 +98,9 @@ services:
         sync: false
       - key: MAILER_FROM
         value: "Roost Assured <hello@roostassured.com>"
-      - key: APP_HOST
-        value: roostassured.com
+      # GeocodeUserJob and NotifyNearbySittersJob run here, so the worker needs the geocoder
+      # contact address the web service uses.
+      - key: GEOCODER_CONTACT_EMAIL
+        sync: false
+      - key: IP_API_KEY
+        sync: false

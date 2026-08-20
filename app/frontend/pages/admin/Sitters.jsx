@@ -1,23 +1,20 @@
-import React, { useEffect, useState } from "react"
+import React from "react"
 import { api } from "../../lib/api"
+import Pagination from "../../components/Pagination"
+import { usePaginated } from "../../hooks/usePaginated"
 
 const ONBOARDING_COLORS = { bg: "var(--amber-100)", fg: "var(--amber-900)" }
 const ACTIVE_COLORS = { bg: "var(--emerald-100)", fg: "var(--emerald-900)" }
 const DEACTIVATED_COLORS = { bg: "var(--red-100)", fg: "var(--red-900)" }
 
 export default function Sitters() {
-  const [sitters, setSitters] = useState(null)
-
-  useEffect(() => { api.get("/admin/sitters").then((r) => setSitters(r.sitters)) }, [])
-
-  const updateSitter = (updated) => {
-    setSitters((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
-  }
+  const { data, meta, setPage, reload } = usePaginated("/admin/sitters")
+  const sitters = data?.sitters
 
   const toggleActive = async (sitter) => {
     const action = sitter.deactivated ? "reactivate" : "deactivate"
-    const result = await api.post(`/admin/sitters/${sitter.id}/${action}`)
-    updateSitter(result.sitter)
+    await api.post(`/admin/sitters/${sitter.id}/${action}`)
+    reload()
   }
 
   if (!sitters) return <p>Loading…</p>
@@ -49,6 +46,7 @@ export default function Sitters() {
           </tbody>
         </table>
       </div>
+      <Pagination meta={meta} onChange={setPage} />
     </div>
   )
 }

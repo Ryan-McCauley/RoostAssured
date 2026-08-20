@@ -1,16 +1,16 @@
 Rails.application.routes.draw do
   namespace :api do
     get "session", to: "sessions#show"
-    resource :session, only: [:create, :destroy]
-    resource :registration, only: [:create]
-    resources :sitters, only: [:show]
-    resource :account, only: [:show, :update]
-    resource :stripe_payment_method, only: [:show, :create]
-    resource :stripe_account, only: [:show] do
+    resource :session, only: [ :create, :destroy ]
+    resource :registration, only: [ :create ]
+    resources :sitters, only: [ :show ]
+    resource :account, only: [ :show, :update ]
+    resource :stripe_payment_method, only: [ :show, :create ]
+    resource :stripe_account, only: [ :show ] do
       post :onboarding_link, on: :collection
     end
-    resource :sitter_profile, only: [:update]
-    resource :sitter_application, only: [:create, :update]
+    resource :sitter_profile, only: [ :update ]
+    resource :sitter_application, only: [ :create, :update ]
     get "job_requests", to: "job_requests#index"
     post "job_requests/:owner_id/bid", to: "bids#create"
     patch "job_requests/:owner_id/bid", to: "bids#update"
@@ -27,38 +27,51 @@ Rails.application.routes.draw do
     patch "jobs/:id/eta", to: "jobs#update_eta"
     patch "jobs/:job_id/tasks/:id", to: "job_tasks#update"
     post "jobs/:job_id/tasks/:id/photo", to: "job_tasks#photo"
-    resource :sitting_request, only: [:destroy]
-    resources :availabilities, only: [:create, :destroy]
-    resources :passwords, only: [:create], param: :token
-    resources :password_resets, only: [:show, :update], param: :token
-    resources :waitlist_signups, only: [:create]
-    resource :zip_search, only: [:create, :destroy]
-    resource :sitting_window, only: [:create]
+    resource :sitting_request, only: [ :destroy ]
+    resources :availabilities, only: [ :create, :destroy ]
+    resources :passwords, only: [ :create ], param: :token
+    resources :password_resets, only: [ :show, :update ], param: :token
+    resources :waitlist_signups, only: [ :create ]
+    resource :zip_search, only: [ :create, :destroy ]
+    resource :sitting_window, only: [ :create ]
+    resources :blocks, only: [ :index, :create, :destroy ]
+    resources :reports, only: [ :create ]
     post "stripe/webhooks", to: "stripe_webhooks#create"
+    post "checkr/webhooks", to: "checkr_webhooks#create"
     get "home", to: "pages#home"
 
     namespace :admin do
       get "waitlist_signups", to: "waitlist_signups#index"
       get "users", to: "users#index"
-      resources :service_areas, only: [:index, :create, :update, :destroy] do
+      resources :service_areas, only: [ :index, :create, :update, :destroy ] do
         collection { get :geocode }
       end
       get "zip_searches", to: "zip_searches#index"
       get "heatmap", to: "heatmap#index"
-      resources :sitter_applications, only: [:index] do
+      resources :sitter_applications, only: [ :index ] do
         member do
           post :approve
           post :reject
         end
       end
-      resources :payments, only: [:index]
-      resources :sitters, only: [:index] do
+      resources :payments, only: [ :index ] do
+        member do
+          post :refund
+        end
+      end
+      resources :sitters, only: [ :index ] do
         member do
           post :deactivate
           post :reactivate
         end
       end
       get "jobs", to: "jobs#index"
+      resources :reports, only: [ :index ] do
+        member do
+          post :review
+          post :dismiss
+        end
+      end
     end
   end
 
