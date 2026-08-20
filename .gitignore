@@ -49,3 +49,7 @@ node_modules
 # https://vitejs.dev/guide/env-and-mode.html#env-files
 *.local
 
+
+# Point-in-time code reviews. Kept locally as working notes: they describe the repo
+# as it was on a given date, so a published copy goes stale as the findings get fixed.
+/docs/code_review_*.md
