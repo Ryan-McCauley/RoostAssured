@@ -77,11 +77,17 @@ class User < ApplicationRecord
     stripe_customer_id.present?
   end
 
-  def has_payment_method?
-    return false unless stripe_customer?
+  # Reads the mirrored column rather than calling Stripe. This is asked on every Account page load
+  # and again on the accept-bid path, and a live `Customer.retrieve` there put a network round trip
+  # (and a Stripe outage) between the owner and their own dashboard. StripePayments::CustomerService
+  # writes it on attach, and the customer.updated webhook keeps it honest if the card is changed or
+  # removed from Stripe's side.
+  def payment_method?
+    stripe_default_payment_method_id.present?
+  end
 
-    customer = Stripe::Customer.retrieve(stripe_customer_id)
-    customer.invoice_settings.default_payment_method.present?
+  def default_payment_method_id
+    stripe_default_payment_method_id
   end
 
   def upcoming_sitting_dates

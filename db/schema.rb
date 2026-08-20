@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_27_130001) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_19_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -130,10 +130,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_130001) do
     t.decimal "application_fee_amount", precision: 8, scale: 2, null: false
     t.bigint "bid_id", null: false
     t.datetime "created_at", null: false
+    t.string "idempotency_key", null: false
     t.string "status", default: "pending", null: false
-    t.string "stripe_payment_intent_id", null: false
+    t.string "stripe_payment_intent_id"
     t.datetime "updated_at", null: false
     t.index ["bid_id"], name: "index_payments_on_bid_id"
+    t.index ["idempotency_key"], name: "index_payments_on_idempotency_key", unique: true
     t.index ["stripe_payment_intent_id"], name: "index_payments_on_stripe_payment_intent_id", unique: true
   end
 
@@ -403,6 +405,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_130001) do
     t.text "special_requests"
     t.string "state"
     t.string "stripe_customer_id"
+    t.string "stripe_default_payment_method_id"
     t.datetime "updated_at", null: false
     t.string "water_location"
     t.integer "waterer_count"

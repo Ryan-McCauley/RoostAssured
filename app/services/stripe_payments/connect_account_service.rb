@@ -4,13 +4,17 @@ module StripePayments
       return if sitter.stripe_account_id.present?
 
       account = ::Stripe::Account.create(
-        type: "express",
-        email: sitter.email_address,
-        business_type: "individual",
-        capabilities: {
-          card_payments: { requested: true },
-          transfers: { requested: true }
-        }
+        {
+          type: "express",
+          email: sitter.email_address,
+          business_type: "individual",
+          capabilities: {
+            card_payments: { requested: true },
+            transfers: { requested: true }
+          }
+        },
+        # Approving an application twice shouldn't leave a second orphaned Connect account behind.
+        idempotency_key: "connect-account-#{sitter.id}"
       )
       sitter.update!(stripe_account_id: account.id, stripe_onboarding_status: "pending")
     end

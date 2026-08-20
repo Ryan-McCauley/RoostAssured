@@ -39,10 +39,10 @@ class Checkr::InvitationServiceTest < ActiveSupport::TestCase
 
   private
 
-  def with_stubbed_checkr_post(responses)
-    Checkr::Client.define_method(:post) { |path, _body| responses.fetch(path) }
-    yield
-  ensure
-    Checkr::Client.remove_method(:post)
+  # Checkr::Client#post is defined on the class itself, so a bare remove_method would delete the
+  # real implementation instead of restoring it -- and every later test in this worker that hits
+  # the client would then die with NoMethodError. with_instance_method puts the original back.
+  def with_stubbed_checkr_post(responses, &block)
+    with_instance_method(Checkr::Client, :post, ->(path, _body) { responses.fetch(path) }, &block)
   end
 end

@@ -20,14 +20,18 @@ class StripePayments::ApplicationFeeServiceTest < ActiveSupport::TestCase
   test "restricts to card payments so Stripe doesn't require a return_url for redirect-based methods" do
     Stripe::Customer.define_singleton_method(:create) { |*| Struct.new(:id).new("cus_123") }
     received_params = nil
-    Stripe::PaymentIntent.define_singleton_method(:create) do |params|
+    received_opts = nil
+    Stripe::PaymentIntent.define_singleton_method(:create) do |params, opts = {}|
       received_params = params
+      received_opts = opts
       Struct.new(:id, :status).new("pi_123", "succeeded")
     end
 
     StripePayments::ApplicationFeeService.new.charge!(@user, "pm_123")
 
     assert_equal [ "card" ], received_params[:payment_method_types]
+    # A double-submitted application form must not bill the $50 twice.
+    assert_equal "application-fee-#{@user.id}-pm_123", received_opts[:idempotency_key]
   ensure
     Stripe::Customer.singleton_class.send(:remove_method, :create)
     Stripe::PaymentIntent.singleton_class.send(:remove_method, :create)

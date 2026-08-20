@@ -16,7 +16,7 @@ class Api::SitterApplicationsControllerTest < ActionDispatch::IntegrationTest
     Stripe::Customer.define_singleton_method(:create) { |*| Struct.new(:id).new("cus_123") }
     Stripe::PaymentIntent.define_singleton_method(:create) { |*| Struct.new(:id, :status).new("pi_123", "succeeded") }
     checkr_responses = { "candidates" => { "id" => "cand_123" }, "invitations" => { "id" => "inv_456" } }
-    Checkr::Client.define_method(:post) { |path, _body| checkr_responses.fetch(path) }
+    stub_checkr_post(checkr_responses)
 
     post "/api/sitter_application", params: application_params.merge(payment_method_id: "pm_123"), as: :json
 
@@ -32,7 +32,6 @@ class Api::SitterApplicationsControllerTest < ActionDispatch::IntegrationTest
   ensure
     Stripe::Customer.singleton_class.send(:remove_method, :create)
     Stripe::PaymentIntent.singleton_class.send(:remove_method, :create)
-    Checkr::Client.remove_method(:post)
   end
 
   test "rejects the application (and never creates it) if the card is declined" do
@@ -52,7 +51,7 @@ class Api::SitterApplicationsControllerTest < ActionDispatch::IntegrationTest
     fee = SitterApplicationFee.create!(user: @user, stripe_payment_intent_id: "pi_prior", amount: 50.00, status: "succeeded")
     Stripe::PaymentIntent.define_singleton_method(:create) { |*| raise "should not be called" }
     checkr_responses = { "candidates" => { "id" => "cand_123" }, "invitations" => { "id" => "inv_456" } }
-    Checkr::Client.define_method(:post) { |path, _body| checkr_responses.fetch(path) }
+    stub_checkr_post(checkr_responses)
 
     post "/api/sitter_application", params: application_params.merge(payment_method_id: "pm_123"), as: :json
 
@@ -60,7 +59,6 @@ class Api::SitterApplicationsControllerTest < ActionDispatch::IntegrationTest
     assert_equal @user.reload.sitter_application.id, fee.reload.sitter_application_id
   ensure
     Stripe::PaymentIntent.singleton_class.send(:remove_method, :create)
-    Checkr::Client.remove_method(:post)
   end
 
   private
@@ -73,5 +71,22 @@ class Api::SitterApplicationsControllerTest < ActionDispatch::IntegrationTest
         background_check_consent: true
       }
     }
+  end
+
+  private
+
+  # Checkr::Client#post is defined on the class itself, so `remove_method` would delete the real
+  # implementation rather than restore it, breaking every later test in the worker. Registers a
+  # teardown that puts the original back.
+  def stub_checkr_post(responses)
+    original = Checkr::Client.instance_method(:post)
+    Checkr::Client.define_method(:post) { |path, _body| responses.fetch(path) }
+    @checkr_restore = -> { Checkr::Client.define_method(:post, original) }
+  end
+
+  def teardown
+    @checkr_restore&.call
+    @checkr_restore = nil
+    super
   end
 end
