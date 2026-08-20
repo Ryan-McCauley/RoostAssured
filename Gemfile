@@ -17,7 +17,7 @@ gem "rack-cors"
 gem "rack-attack"
 
 # Stripe Connect marketplace payments [https://github.com/stripe/stripe-ruby]
-gem "stripe", "~> 13.0"
+gem "stripe", "~> 19.5"
 
 # HTTP client for the Checkr background check API (no official Ruby gem) [https://github.com/lostisland/faraday]
 gem "faraday"
